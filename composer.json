@@ -1,0 +1,35 @@
+{
+	"name": "rudderstack/rudder-sdk-php",
+	"version": "1.0.1",
+	"description": "RudderStack PHP library",
+	"keywords": [
+		"analytics",
+		"rudder",
+		"rudderstack",
+		"rudderanalytics.js"
+	],
+	"homepage": "https://rudderstack.com/",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "RudderStack <arnab@rudderstack.com>",
+			"homepage": "https://rudderstack.com/"
+		}
+	],
+	"require": {
+		"php": ">=5.3.3"
+	},
+	"require-dev": {
+		"phpunit/phpunit": "~4.0",
+		"overtrue/phplint": "^1.1",
+		"squizlabs/php_codesniffer": "^3.3"
+	},
+	"autoload": {
+		"files": [
+			"lib/Rudder.php"
+		]
+	},
+	"bin": [
+		"bin/analytics"
+	]
+}
