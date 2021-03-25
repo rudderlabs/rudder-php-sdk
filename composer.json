@@ -2,6 +2,7 @@
 	"name": "rudderstack/rudder-sdk-php",
 	"version": "1.0.1",
 	"description": "RudderStack PHP library",
+	"type": "library",
 	"keywords": [
 		"analytics",
 		"rudder",
