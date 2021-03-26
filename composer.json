@@ -1,6 +1,6 @@
 {
-	"name": "rudderstack/rudder-sdk-php-library",
-	"version": "1.0.1",
+	"name": "rudderstack/rudder-php-sdk",
+	"version": "1.0.0",
 	"description": "RudderStack PHP library",
 	"type": "library",
 	"keywords": [
