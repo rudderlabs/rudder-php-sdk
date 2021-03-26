@@ -5,20 +5,18 @@
 More information on RudderStack can be found [here](https://github.com/rudderlabs/rudder-server).
 
 ## Getting Started with PHP SDK
-
-Install `rudder-sdk-php` using `composer`
+Install `rudder-php-sdk` using `composer`
 ```
-git clone https://github.com/rudderlabs/rudder-sdk-php /my/app/folders/
+git clone https://github.com/rudderlabs/rudder-php-sdk /my/app/folders/
 ```
 
 ## Initialize the ```Client```
-
 ```
 require_once("/path/to/lib/Rudder.php");
 
 Rudder::init(WRITE_KEY, array(
   "data_plane_url" => DATA_PLANE_URL,
-  "consumer"       => "lib_curl", // fork_curl
+  "consumer"       => "lib_curl",
   "debug"          => true,
   "max_queue_size" => 10000,
   "batch_size"     => 100
@@ -26,7 +24,6 @@ Rudder::init(WRITE_KEY, array(
 ```
 
 ## Send Events
-
 ```
 Rudder::track(array(
   "userId" => "f4ca124298",
@@ -38,5 +35,4 @@ Rudder::track(array(
 ```
 
 ## Contact Us
-
 If you come across any issues while configuring or using this SDK, feel free to start a conversation on our [Slack](https://resources.rudderstack.com/join-rudderstack-slack) channel. We will be happy to help you.
