@@ -12,6 +12,33 @@ class Rudder {
    */
   public static function init($secret, $options = array()) {
     self::assert($secret, "Rudder::init() requires secret");
+    // check if ssl is here --> check if it is http or https
+    if(isset($options["ssl"])) {
+      if($options["ssl"]) { // if ssl is true only https is expected
+        if (isset($options["data_plane_url"])) {
+          $url = parse_url($options["data_plane_url"]);
+          if($url['scheme'] == 'https'){
+            $options["data_plane_url"] = preg_replace("(^https?://)", "", $options["data_plane_url"] );
+         } else {
+           // throw error
+           $errstr = ("Protocol is inappropriate wrt ssl");
+           $this->handleError(400, $errstr);
+         }
+        }
+      } else {
+        // if ssl is false only http is expected
+        if (isset($options["data_plane_url"])) {
+          $url = parse_url($options["data_plane_url"]);
+          if($url['scheme'] == 'http'){
+            $options["data_plane_url"] = preg_replace("(^https?://)", "", $options["data_plane_url"] );
+         } else {
+           // throw error
+           $errstr = ("Protocol is inappropriate wrt ssl");
+           $this->handleError(400, $errstr);
+         }
+        }
+      }
+    }
     self::$client = new Rudder_Client($secret, $options);
   }
 
