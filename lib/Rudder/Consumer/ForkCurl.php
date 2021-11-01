@@ -35,7 +35,7 @@ class Rudder_Consumer_ForkCurl extends Rudder_QueueConsumer {
     $payload = escapeshellarg($payload);
     $secret = escapeshellarg($this->secret);
 
-    $protocol = "https://";
+    $protocol = $this->ssl() ? 'https://' : 'http://';
     if ($this->dataPlaneUrl) {
       $dataPlaneUrl = $this->dataPlaneUrl;
     } else {
