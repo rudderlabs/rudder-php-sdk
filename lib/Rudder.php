@@ -14,33 +14,43 @@ class Rudder {
     self::assert($secret, "Rudder::init() requires secret");
     // check if ssl is here --> check if it is http or https
     if(isset($options["ssl"])) {
-      if($options["ssl"]) { // if ssl is true only https is expected
-        if (isset($options["data_plane_url"])) {
-          $url = parse_url($options["data_plane_url"]);
-          if($url['scheme'] == 'https'){
-            $options["data_plane_url"] = preg_replace("(^https?://)", "", $options["data_plane_url"] );
-         } else {
-           // throw error
-           $errstr = ("Protocol is inappropriate wrt ssl");
-           $this->handleError(400, $errstr);
-         }
-        }
-      } else {
-        // if ssl is false only http is expected
-        if (isset($options["data_plane_url"])) {
-          $url = parse_url($options["data_plane_url"]);
-          if($url['scheme'] == 'http'){
-            $options["data_plane_url"] = preg_replace("(^https?://)", "", $options["data_plane_url"] );
-         } else {
-           // throw error
-           $errstr = ("Protocol is inappropriate wrt ssl");
-           $this->handleError(400, $errstr);
-         }
-        }
-      }
+      $this->handleSSL($options);
     }
     self::$client = new Rudder_Client($secret, $options);
   }
+
+  /**
+   * checks the dataplane url format only is ssl key is present
+   * @param  array  $options  passed straight to the client
+   */
+  private function handleSSL($options) {
+    if($options["ssl"] == 'true') { // if ssl is true only https is expected
+      if (isset($options["data_plane_url"])) {
+          $options["data_plane_url"] = $this->handleUrl($options["data_plane_url"],'https');  
+      }
+    } else {
+      // if ssl is false only http is expected
+      if (isset($options["data_plane_url"])) {
+        $options["data_plane_url"] = $this->handleUrl($options["data_plane_url"],'http');  
+      }
+    } 
+}
+/**
+   * checks the dataplane url format only is ssl key is present
+   * @param string $data_plane_url  dataplane url entered in the init() function
+   * @param string $protocol the protocol needs to be used according to the ssl configuration
+   */
+private function handleUrl($data_plane_url, $protocol) {
+  $url = parse_url($options["data_plane_url"]);
+  if($url['scheme'] == $protocol){
+    $options["data_plane_url"] = preg_replace("(^https?://)", "", $options["data_plane_url"] );
+ } else {
+   // throw error
+   $errstr = ("Protocol is inappropriate wrt ssl");
+   $this->handleError(400, $errstr);
+ }
+ return $data_plane_url;
+}
 
   /**
    * Tracks a user action
