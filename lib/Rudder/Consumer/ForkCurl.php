@@ -35,14 +35,14 @@ class Rudder_Consumer_ForkCurl extends Rudder_QueueConsumer {
     $payload = escapeshellarg($payload);
     $secret = escapeshellarg($this->secret);
 
-     $protocol = $this->ssl() ? 'https://' : 'http://';
+    $protocol = $this->ssl() ? 'https://' : 'http://';
     if ($this->dataPlaneUrl) {
       $dataPlaneUrl = $this->dataPlaneUrl;
     } else {
       $dataPlaneUrl = "hosted.rudderlabs.com";
     }
     $path = "/v1/batch";
-    $url =  $protocol . $dataPlaneUrl . $path;
+    $url = $protocol . $dataPlaneUrl . $path;
 
     $cmd = "curl -u ${secret}: -X POST -H 'Content-Type: application/json'";
 

@@ -13,9 +13,7 @@ class Rudder {
   public static function init($secret, $options = array()) {
     self::assert($secret, "Rudder::init() requires secret");
     // check if ssl is here --> check if it is http or https
-    if(isset($options["ssl"])) {
-      $this->handleSSL($options);
-    }
+    $this->handleSSL($options);
     self::$client = new Rudder_Client($secret, $options);
   }
 
@@ -24,6 +22,7 @@ class Rudder {
    * @param  array  $options  passed straight to the client
    */
   private function handleSSL($options) {
+    if(filter_var($options["data_plane_url"], FILTER_VALIDATE_URL)) {
     if($options["ssl"] == 'true') { // if ssl is true only https is expected
       if (isset($options["data_plane_url"])) {
           $options["data_plane_url"] = $this->handleUrl($options["data_plane_url"],'https');  
@@ -33,7 +32,7 @@ class Rudder {
       if (isset($options["data_plane_url"])) {
         $options["data_plane_url"] = $this->handleUrl($options["data_plane_url"],'http');  
       }
-    } 
+    } }
 }
 /**
    * checks the dataplane url format only is ssl key is present
