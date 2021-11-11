@@ -13,7 +13,14 @@ class Rudder {
   public static function init($secret, $options = array()) {
     self::assert($secret, "Rudder::init() requires secret");
     // check if ssl is here --> check if it is http or https
-    $this->handleSSL($options);
+    if(isset($options['data_plane_url'])) {
+      $this->handleSSL($options);
+    } else {
+      // throw error
+      $errstr = ("The dataplane URL is null");
+      $this->handleError(400, $errstr);
+    }
+    
     self::$client = new Rudder_Client($secret, $options);
   }
 
@@ -28,6 +35,10 @@ class Rudder {
         $protocol = "http";
       }
       $options["data_plane_url"] = $this->handleUrl($options["data_plane_url"], $protocol);
+    } else {
+       // throw error
+      $errstr = ("The Dataplane URL is invalid");
+      $this->handleError(400, $errstr);
     }
 }
 /**
