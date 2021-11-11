@@ -45,7 +45,7 @@ private function handleUrl($data_plane_url, $protocol) {
     $options["data_plane_url"] = preg_replace("(^https?://)", "", $options["data_plane_url"] );
  } else {
    // throw error
-   $errstr = ("Protocol is inappropriate wrt ssl");
+   $errstr = ("Data plane URL and SSL options are incompatible with each other");
    $this->handleError(400, $errstr);
  }
  return $data_plane_url;
