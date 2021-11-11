@@ -23,16 +23,12 @@ class Rudder {
    */
   private function handleSSL($options) {
     if(filter_var($options["data_plane_url"], FILTER_VALIDATE_URL)) {
-    if($options["ssl"] == 'true') { // if ssl is true only https is expected
-      if (isset($options["data_plane_url"])) {
-          $options["data_plane_url"] = $this->handleUrl($options["data_plane_url"],'https');  
+      $protocol = "https";
+      if($options["ssl"] == false) {
+        $protocol = "http";
       }
-    } else {
-      // if ssl is false only http is expected
-      if (isset($options["data_plane_url"])) {
-        $options["data_plane_url"] = $this->handleUrl($options["data_plane_url"],'http');  
-      }
-    } }
+      $options["data_plane_url"] = $this->handleUrl($options["data_plane_url"], $protocol);
+    }
 }
 /**
    * checks the dataplane url format only is ssl key is present
