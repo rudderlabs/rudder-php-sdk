@@ -18,7 +18,7 @@ class Rudder {
     } else {
       // log error
       $errstr = ("The dataplane URL is null");
-      echo $errstr;
+      throw new Exception($errstr);
     }
     
     self::$client = new Rudder_Client($secret, $options);
@@ -29,9 +29,12 @@ class Rudder {
    * @param  array  $options  passed straight to the client
    */
   private static function handleSSL($options) {
-    $dataPlaneURLPattern = ';(?:https?:\/\/)?(?:[a-zA-Z0-9.-]+?\.(?:com|net|org|gov|edu|mil|in|io)|\d+\.\d+\.\d+\.\d+);';
-    
-    if(preg_match($dataPlaneURLPattern, $options["data_plane_url"])){
+
+    $urlComponentArray = parse_url($options["data_plane_url"]);
+    if (!(isset($urlComponentArray["scheme"]))) {
+      $options["data_plane_url"] = 'https://' . $options["data_plane_url"] ;
+    }
+    if(filter_var($options["data_plane_url"], FILTER_VALIDATE_URL)){
       $protocol = "https";
       if(isset($options["ssl"]) && $options["ssl"]== false) {
         $protocol = "http";
@@ -40,7 +43,7 @@ class Rudder {
     } else {
        // log error
       $errstr = ("The Dataplane URL is invalid");
-      echo $errstr;
+      throw new Exception($errstr);
     }
 }
 /**
@@ -49,15 +52,14 @@ class Rudder {
    * @param string $protocol the protocol needs to be used according to the ssl configuration
    */
 private static function handleUrl($data_plane_url, $protocol) {
-  $url = parse_url($data_plane_url);
-  if(!(isset($url["scheme"])) || (isset($url["scheme"]) && $url['scheme'] == $protocol)){
+  $urlComponentArray = parse_url($data_plane_url);
+  if($urlComponentArray['scheme'] == $protocol){
     // if the protocol does not exist then error is not thrown, rather added with https:// later on
    return preg_replace("(^https?://)", "", $data_plane_url );
  } else {
    // log error
    $errstr = ("Data plane URL and SSL options are incompatible with each other");
-   echo $errstr;
-   return "";
+   throw new Exception($errstr);
  }
  
 }
