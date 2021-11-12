@@ -14,11 +14,11 @@ class Rudder {
     self::assert($secret, "Rudder::init() requires secret");
     // check if ssl is here --> check if it is http or https
     if(isset($options['data_plane_url'])) {
-      $this->handleSSL($options);
+      self::handleSSL($options);
     } else {
-      // throw error
+      // log error
       $errstr = ("The dataplane URL is null");
-      $this->handleError(400, $errstr);
+      echo $errstr;
     }
     
     self::$client = new Rudder_Client($secret, $options);
@@ -28,17 +28,19 @@ class Rudder {
    * checks the dataplane url format only is ssl key is present
    * @param  array  $options  passed straight to the client
    */
-  private function handleSSL($options) {
-    if(filter_var($options["data_plane_url"], FILTER_VALIDATE_URL)) {
+  private static function handleSSL($options) {
+    $dataPlaneURLPattern = ';(?:https?:\/\/)?(?:[a-zA-Z0-9.-]+?\.(?:com|net|org|gov|edu|mil|in|io)|\d+\.\d+\.\d+\.\d+);';
+    
+    if(preg_match($dataPlaneURLPattern, $options["data_plane_url"])){
       $protocol = "https";
-      if($options["ssl"] == false) {
+      if(isset($options["ssl"]) && $options["ssl"]== false) {
         $protocol = "http";
       }
-      $options["data_plane_url"] = $this->handleUrl($options["data_plane_url"], $protocol);
+      $options["data_plane_url"] = self::handleUrl($options["data_plane_url"], $protocol);
     } else {
-       // throw error
+       // log error
       $errstr = ("The Dataplane URL is invalid");
-      $this->handleError(400, $errstr);
+      echo $errstr;
     }
 }
 /**
@@ -46,16 +48,18 @@ class Rudder {
    * @param string $data_plane_url  dataplane url entered in the init() function
    * @param string $protocol the protocol needs to be used according to the ssl configuration
    */
-private function handleUrl($data_plane_url, $protocol) {
-  $url = parse_url($options["data_plane_url"]);
-  if($url['scheme'] == $protocol){
-    $options["data_plane_url"] = preg_replace("(^https?://)", "", $options["data_plane_url"] );
+private static function handleUrl($data_plane_url, $protocol) {
+  $url = parse_url($data_plane_url);
+  if(!(isset($url["scheme"])) || (isset($url["scheme"]) && $url['scheme'] == $protocol)){
+    // if the protocol does not exist then error is not thrown, rather added with https:// later on
+   return preg_replace("(^https?://)", "", $data_plane_url );
  } else {
-   // throw error
+   // log error
    $errstr = ("Data plane URL and SSL options are incompatible with each other");
-   $this->handleError(400, $errstr);
+   echo $errstr;
+   return "";
  }
- return $data_plane_url;
+ 
 }
 
   /**
