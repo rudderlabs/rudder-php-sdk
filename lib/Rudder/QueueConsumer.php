@@ -16,6 +16,8 @@ abstract class Rudder_QueueConsumer extends Rudder_Consumer {
    * @param array  $options
    */
   public function __construct($secret, $options = array()) {
+    $logString = "--> in QueueConsumer.php CONSTRUCT -->";
+    echo $logString;
     parent::__construct($secret, $options);
 
     if (isset($options["max_queue_size"])) {
@@ -27,6 +29,9 @@ abstract class Rudder_QueueConsumer extends Rudder_Consumer {
     }
 
     if (isset($options["data_plane_url"])) {
+      $dataPlane = "--> DATA PLANE IN QUEUE CONSUMER ";
+      echo $dataPlane;
+      echo $options["data_plane_url"];
       $this->dataPlaneUrl = $options["data_plane_url"];
     }
 
@@ -106,6 +111,8 @@ abstract class Rudder_QueueConsumer extends Rudder_Consumer {
    * Flushes our queue of messages by batching them to the server
    */
   public function flush() {
+    $logString = "in QueueConsumer.php FLUSH -->";
+    echo $logString;
     $count = count($this->queue);
     $success = true;
 
@@ -125,6 +132,8 @@ abstract class Rudder_QueueConsumer extends Rudder_Consumer {
    * @return boolean whether call has succeeded
    */
   protected function enqueue($item) {
+    $logString = " in QueueConsumer.php ENQUEUE -->";
+    echo $logString;
     $count = count($this->queue);
 
     if ($count > $this->max_queue_size) {
@@ -148,6 +157,8 @@ abstract class Rudder_QueueConsumer extends Rudder_Consumer {
    * @return {Array}
    */
   protected function payload($batch){
+    $logString = " in QueueConsumer .php PAYLOAD--> ";
+    echo $logString;
     return array(
       "batch" => $batch,
       "sentAt" => date("c"),

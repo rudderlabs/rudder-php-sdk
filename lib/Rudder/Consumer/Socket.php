@@ -26,10 +26,14 @@ class Rudder_Consumer_Socket extends Rudder_QueueConsumer {
 
   //define getter method for consumer type
   public function getConsumer() {
+    $logString = "in socket.php";
+    echo $logString;
     return $this->type;
   }
 
   public function flushBatch($batch) {
+    $logString = "in socket.php";
+    echo $logString;
     $socket = $this->createSocket();
 
     if (!$socket) {
@@ -48,6 +52,8 @@ class Rudder_Consumer_Socket extends Rudder_QueueConsumer {
   }
 
   private function createSocket() {
+    $logString = "in socket.php";
+    echo $logString;
     if ($this->socket_failed) {
       return false;
     }
@@ -94,6 +100,8 @@ class Rudder_Consumer_Socket extends Rudder_QueueConsumer {
    * @return boolean $success
    */
   private function makeRequest($socket, $req, $retry = true) {
+    $logString = "in socket.php";
+    echo $logString;
     $bytes_written = 0;
     $bytes_total = strlen($req);
     $closed = false;
@@ -166,6 +174,8 @@ class Rudder_Consumer_Socket extends Rudder_QueueConsumer {
    * @return string body
    */
   private function createBody($dataPlaneUrl, $content) {
+    $logString = "in socket.php";
+    echo $logString;
     $req = "";
     $req.= "POST /v1/import HTTP/1.1\r\n";
     $req.= "dataPlaneUrl: " . $dataPlaneUrl . "\r\n";
@@ -212,6 +222,8 @@ class Rudder_Consumer_Socket extends Rudder_QueueConsumer {
    *     string $message JSON response from the api
    */
   private function parseResponse($res) {
+    $logString = "in socket.php";
+    echo $logString;
     $contents = explode("\n", $res);
 
     // Response comes back as HTTP/1.1 200 OK

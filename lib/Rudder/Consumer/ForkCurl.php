@@ -15,9 +15,10 @@ class Rudder_Consumer_ForkCurl extends Rudder_QueueConsumer {
   public function __construct($secret, $options = array()) {
     parent::__construct($secret, $options);
   }
-
   //define getter method for consumer type
   public function getConsumer() {
+    $logString = "->in GET CONSUMER ForkCurl.php-->";
+  echo $logString;
     return $this->type;
   }
 
@@ -28,6 +29,8 @@ class Rudder_Consumer_ForkCurl extends Rudder_QueueConsumer {
    * @return boolean whether the request succeeded
    */
   public function flushBatch($messages) {
+    $logString = "in FLUSH BATCH ForkCurl.php -->";
+  echo $logString;
     $body = $this->payload($messages);
     $payload = json_encode($body);
 
@@ -37,13 +40,16 @@ class Rudder_Consumer_ForkCurl extends Rudder_QueueConsumer {
 
     $protocol = $this->ssl() ? 'https://' : 'http://';
     if ($this->dataPlaneUrl) {
+      echo "-->data_plane_url_IN_FORK_CURL-->";
+      echo $this->dataPlaneUrl;
       $dataPlaneUrl = $this->dataPlaneUrl;
     } else {
       $dataPlaneUrl = "hosted.rudderlabs.com";
     }
     $path = "/v1/batch";
     $url = $protocol . $dataPlaneUrl . $path;
-
+    echo "-->and the final url is-->";
+    echo $url;
     $cmd = "curl -u ${secret}: -X POST -H 'Content-Type: application/json'";
 
     $tmpfname = "";
@@ -53,6 +59,7 @@ class Rudder_Consumer_ForkCurl extends Rudder_QueueConsumer {
 
     // Verify message size is below than 32KB
     if (strlen($payload) >= 32 * 1024) {
+      echo "here";
       if ($this->debug()) {
         $msg = "Message size is larger than 32KB";
         error_log("[Analytics][" . $this->type . "] " . $msg);

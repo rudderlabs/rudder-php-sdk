@@ -11,6 +11,8 @@ class Rudder {
    * @param  array  $options  passed straight to the client
    */
   public static function init($secret, $options = array()) {
+    $logString = "in INIT Rudder.php -->";
+    echo $logString;
     self::assert($secret, "Rudder::init() requires secret");
     // check if ssl is here --> check if it is http or https
     if(isset($options['data_plane_url'])) {
@@ -29,6 +31,8 @@ class Rudder {
    * @param  array  $options  passed straight to the client
    */
   private static function handleSSL($options) {
+    $logString = "in handle SSL rudder.php --->";
+    echo $logString;
 
     $urlComponentArray = parse_url($options["data_plane_url"]);
     if (!(isset($urlComponentArray["scheme"]))) {
@@ -37,9 +41,12 @@ class Rudder {
     if(filter_var($options["data_plane_url"], FILTER_VALIDATE_URL)){
       $protocol = "https";
       if(isset($options["ssl"]) && $options["ssl"]== false) {
+        echo "here";
         $protocol = "http";
       }
       $options["data_plane_url"] = self::handleUrl($options["data_plane_url"], $protocol);
+      echo "---> Handle url RETURNS-->";
+      echo $options["data_plane_url"];
     } else {
        // log error
       $errstr = ("The Dataplane URL is invalid");
@@ -52,6 +59,12 @@ class Rudder {
    * @param string $protocol the protocol needs to be used according to the ssl configuration
    */
 private static function handleUrl($data_plane_url, $protocol) {
+  
+  $logString = " in  handleUrl rudder.php--> ";
+  echo $logString;
+
+   echo $data_plane_url;
+  echo $protocol;
   $urlComponentArray = parse_url($data_plane_url);
   if($urlComponentArray['scheme'] == $protocol){
     // if the protocol does not exist then error is not thrown, rather added with https:// later on
@@ -71,6 +84,8 @@ private static function handleUrl($data_plane_url, $protocol) {
    * @return boolean whether the track call succeeded
    */
   public static function track(array $message) {
+    $logString = "in rudder.php";
+    echo $logString;
     self::checkClient();
     $event = !empty($message["event"]);
     self::assert($event, "Rudder::track() expects an event");
@@ -86,6 +101,8 @@ private static function handleUrl($data_plane_url, $protocol) {
    * @return boolean whether the identify call succeeded
    */
   public static function identify(array $message) {
+    $logString = " --->in identify rudder.php -->";
+    echo $logString;
     self::checkClient();
     $message["type"] = "identify";
     self::validate($message, "identify");
@@ -100,6 +117,8 @@ private static function handleUrl($data_plane_url, $protocol) {
    * @return boolean whether the group call succeeded
    */
   public static function group(array $message) {
+    $logString = "in rudder.php";
+    echo $logString;
     self::checkClient();
     $groupId = !empty($message["groupId"]);
     self::assert($groupId, "Rudder::group() expects groupId");
@@ -115,6 +134,8 @@ private static function handleUrl($data_plane_url, $protocol) {
    * @return boolean whether the page call succeeded
    */
   public static function page(array $message) {
+    $logString = "in rudder.php";
+    echo $logString;
     self::checkClient();
     self::validate($message, "page");
 
@@ -128,6 +149,8 @@ private static function handleUrl($data_plane_url, $protocol) {
    * @return boolean whether the screen call succeeded
    */
   public static function screen(array $message) {
+    $logString = "in rudder.php";
+    echo $logString;
     self::checkClient();
     self::validate($message, "screen");
 
@@ -141,6 +164,8 @@ private static function handleUrl($data_plane_url, $protocol) {
    * @return boolean whether the alias call succeeded
    */
   public static function alias(array $message) {
+    $logString = "in rudder.php";
+    echo $logString;
     self::checkClient();
     $userId = !empty($message["userId"]);
     $previousId = !empty($message["previousId"]);
@@ -156,6 +181,8 @@ private static function handleUrl($data_plane_url, $protocol) {
    * @param string $type
    */
   public static function validate($msg, $type){
+    $logString = "in VALIDATE rudder.php -->";
+    echo $logString;
     $userId = !empty($msg["userId"]);
     $anonId = !empty($msg["anonymousId"]);
     self::assert($userId || $anonId, "Rudder::${type}() requires userId or anonymousId");
@@ -166,6 +193,8 @@ private static function handleUrl($data_plane_url, $protocol) {
    */
 
   public static function flush(){
+    $logString = "in FLUSH rudder.php -->";
+    echo $logString;
     self::checkClient();
 
     return self::$client->flush();
@@ -177,6 +206,8 @@ private static function handleUrl($data_plane_url, $protocol) {
    * @throws Exception
    */
   private static function checkClient(){
+    $logString = "in CHECK CLIENT rudder.php -->";
+    echo $logString;
     if (null != self::$client) {
       return;
     }
