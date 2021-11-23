@@ -27,8 +27,6 @@ class Rudder_Consumer_LibCurl extends Rudder_QueueConsumer {
    * @return boolean whether the request succeeded
    */
   public function flushBatch($messages) {
-    $logString = "in FLUSH BATCH LibCurl.php";
-    echo $logString;
     $body = $this->payload($messages);
     $payload = json_encode($body);
     $secret = $this->secret;
@@ -116,8 +114,6 @@ class Rudder_Consumer_LibCurl extends Rudder_QueueConsumer {
   }
 
   public function executePost($ch) {
-    $logString = "in EXECUTE POST LibCurl.php";
-    echo $logString;
     curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     return $httpCode;

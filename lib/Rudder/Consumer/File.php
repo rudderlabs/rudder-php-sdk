@@ -27,8 +27,6 @@ class Rudder_Consumer_File extends Rudder_Consumer {
   }
 
   public function __destruct() {
-    $logString = "in File.php";
-    echo $logString;
     if ($this->file_handle &&
         "Unknown" != get_resource_type($this->file_handle)) {
       fclose($this->file_handle);
@@ -37,8 +35,6 @@ class Rudder_Consumer_File extends Rudder_Consumer {
 
   //define getter method for consumer type
   public function getConsumer() {
-    $logString = "in File.php";
-    echo $logString;
     return $this->type;
   }
 
@@ -49,8 +45,6 @@ class Rudder_Consumer_File extends Rudder_Consumer {
    * @return [boolean] whether the track call succeeded
    */
   public function track(array $message) {
-    $logString = "in File.php";
-    echo $logString;
     return $this->write($message);
   }
 
@@ -61,8 +55,6 @@ class Rudder_Consumer_File extends Rudder_Consumer {
    * @return [boolean] whether the identify call succeeded
    */
   public function identify(array $message) {
-    $logString = "in File.php";
-    echo $logString;
     return $this->write($message);
   }
 
@@ -73,8 +65,6 @@ class Rudder_Consumer_File extends Rudder_Consumer {
    * @return [boolean] whether the group call succeeded
    */
   public function group(array $message) {
-    $logString = "in File.php";
-    echo $logString;
     return $this->write($message);
   }
 
@@ -85,8 +75,6 @@ class Rudder_Consumer_File extends Rudder_Consumer {
    * @return [boolean] whether the page call succeeded
    */
   public function page(array $message) {
-    $logString = "in File.php";
-    echo $logString;
     return $this->write($message);
   }
 
@@ -97,8 +85,6 @@ class Rudder_Consumer_File extends Rudder_Consumer {
    * @return [boolean] whether the screen call succeeded
    */
   public function screen(array $message) {
-    $logString = "in File.php";
-    echo $logString;
     return $this->write($message);
   }
 
@@ -109,8 +95,6 @@ class Rudder_Consumer_File extends Rudder_Consumer {
    * @return boolean whether the alias call succeeded
    */
   public function alias(array $message) {
-    $logString = "in File.php";
-    echo $logString;
     return $this->write($message);
   }
 
@@ -120,8 +104,6 @@ class Rudder_Consumer_File extends Rudder_Consumer {
    * @return [boolean] whether the request succeeded
    */
   private function write($body) {
-    $logString = "in File.php";
-    echo $logString;
     if (!$this->file_handle) {
       return false;
     }
