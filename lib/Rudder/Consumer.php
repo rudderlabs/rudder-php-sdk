@@ -68,8 +68,6 @@ abstract class Rudder_Consumer {
    * @return boolean
    */
   protected function debug() {
-    $logString = "-->in DEBUG consumer.php -->";
-    echo $logString;
     return isset($this->options["debug"]) ? $this->options["debug"] : false;
   }
 
@@ -80,8 +78,6 @@ abstract class Rudder_Consumer {
    * @return boolean
    */
   protected function ssl() {
-    $logString = "in SSL Consumer.php -->";
-    echo $logString;
     return isset($this->options["ssl"]) ? $this->options["ssl"] : true;
   }
 
@@ -92,13 +88,6 @@ abstract class Rudder_Consumer {
    * @param  string $msg
    */
   protected function handleError($code, $msg) {
-    $logString = "in HANDLE ERROR Consumer.php-->";
-    echo $logString;
-    echo ("[Analytics][" . $this->type . "] " . $msg);
-    echo "-->the code is-->";
-    echo $code;
-    //echo $msg;
-    
     if (isset($this->options['error_handler'])) {
       $handler = $this->options['error_handler'];
       $handler($code, $msg);

@@ -16,8 +16,6 @@ class Rudder_Consumer_LibCurl extends Rudder_QueueConsumer {
   } 
   //define getter method for consumer type
   public function getConsumer() {
-    $logString = "in GET CONSUMER LibCurl.php";
-    echo $logString;
     return $this->type;
   }
 

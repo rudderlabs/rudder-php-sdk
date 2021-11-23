@@ -48,8 +48,6 @@ class Rudder_Client {
    * @return [boolean] whether the track call succeeded
    */
   public function track(array $message) {
-    $logString = "in TRACK client.php";
-    echo $logString;
     $message = $this->message($message, "properties");
     $message["type"] = "track";
 
@@ -63,8 +61,6 @@ class Rudder_Client {
    * @return [boolean] whether the track call succeeded
    */
   public function identify(array $message) {
-    $logString = " in IDENTIFY client.php -->";
-    echo $logString;
     $message = $this->message($message, "traits");
     $message["type"] = "identify";
 
@@ -78,8 +74,6 @@ class Rudder_Client {
    * @return [boolean] whether the group call succeeded
    */
   public function group(array $message) {
-    $logString = "in GROUP client.php";
-    echo $logString;
     $message = $this->message($message, "traits");
     $message["type"] = "group";
 
@@ -93,8 +87,6 @@ class Rudder_Client {
    * @return [boolean] whether the page call succeeded
    */
   public function page(array $message) {
-    $logString = "in PAGE client.php";
-    echo $logString;
     $message = $this->message($message, "properties");
     $message["type"] = "page";
 
@@ -108,8 +100,6 @@ class Rudder_Client {
    * @return [boolean] whether the screen call succeeded
    */
   public function screen(array $message) {
-    $logString = "in SCREEN client.php";
-    echo $logString;
     $message = $this->message($message, "properties");
     $message["type"] = "screen";
 
@@ -123,8 +113,6 @@ class Rudder_Client {
    * @return boolean whether the alias call succeeded
    */
   public function alias(array $message) {
-    $logString = " in ALIAS client.php";
-    echo $logString;
     $message = $this->message($message);
     $message["type"] = "alias";
 
@@ -136,8 +124,6 @@ class Rudder_Client {
    * @return boolean true if flushed successfully
    */
   public function flush() {
-    $logString = "in FLUSH client.php -->";
-    echo $logString;
     if (method_exists($this->consumer, 'flush')) {
       return $this->consumer->flush();
     }
@@ -159,8 +145,6 @@ class Rudder_Client {
    * @param  ts $timestamp - time in seconds (time())
    */
   private function formatTime($ts) {
-    $logString = " -->in FORMAT TIME client.php -->";
-    echo $logString;
     // time()
     if (null == $ts || !$ts) {
       $ts = time();
@@ -201,8 +185,6 @@ class Rudder_Client {
    */
 
   private function message($msg, $def = ""){
-    $logString = " in MESSAGE client.php -->";
-    echo $logString;
     if ($def && !isset($msg[$def])) {
       $msg[$def] = array();
     }
@@ -233,8 +215,6 @@ class Rudder_Client {
    */
 
   private static function messageId(){
-    $logString = " in MESSAGE ID client.php -->";
-    echo $logString;
     return sprintf("%04x%04x-%04x-%04x-%04x-%04x%04x%04x",
       mt_rand(0, 0xffff),
       mt_rand(0, 0xffff),
@@ -252,8 +232,6 @@ class Rudder_Client {
    * @return array additional context
    */
   private function getDefaultContext() {
-    $logString = " in GET DEFAULT context client.php -->";
-    echo $logString;
     global $RUDDER_VERSION;
 
     return array(

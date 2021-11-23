@@ -1,6 +1,6 @@
 <?php
 require "lib/Rudder.php";
-echo "htdocs ";
+echo "From sample.php";
 Rudder::init("WRITE-KEY", array(
     "data_plane_url" => "DATA-PLANE-URL",
     "consumer"       => "fork_curl", // lib_curl
