@@ -16,10 +16,10 @@ class Rudder {
     self::assert($secret, "Rudder::init() requires secret");
     // check if ssl is here --> check if it is http or https
     if(isset($options['data_plane_url'])) {
-      self::handleSSL($options);
+      $options["data_plane_url"] = self::handleSSL($options);
     } else {
       // log error
-      $errstr = ("The dataplane URL is null");
+      $errstr = ("'data_plane_url' option is required");
       throw new Exception($errstr);
     }
     
@@ -44,12 +44,13 @@ class Rudder {
         echo "here";
         $protocol = "http";
       }
-      $options["data_plane_url"] = self::handleUrl($options["data_plane_url"], $protocol);
+      $urlWithoutProtocol = self::handleUrl($options["data_plane_url"], $protocol);
       echo "---> Handle url RETURNS-->";
-      echo $options["data_plane_url"];
+      echo $urlWithoutProtocol;
+      return $urlWithoutProtocol;
     } else {
        // log error
-      $errstr = ("The Dataplane URL is invalid");
+      $errstr = ("'data_plane_url' input is invalid");
       throw new Exception($errstr);
     }
 }
