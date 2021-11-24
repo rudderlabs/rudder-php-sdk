@@ -12,16 +12,17 @@ class Rudder {
    */
   public static function init($secret, $options = array()) {
     self::assert($secret, "Rudder::init() requires secret");
+    $optionsClone = unserialize(serialize($options));
     // check if ssl is here --> check if it is http or https
-    if(isset($options['data_plane_url'])) {
-      $options["data_plane_url"] = self::handleSSL($options);
+    if(isset($optionsClone['data_plane_url'])) {
+      $optionsClone["data_plane_url"] = self::handleSSL($optionsClone);
     } else {
       // log error
       $errstr = ("'data_plane_url' option is required");
       throw new Exception($errstr);
     }
     
-    self::$client = new Rudder_Client($secret, $options);
+    self::$client = new Rudder_Client($secret, $optionsClone);
   }
 
   /**
