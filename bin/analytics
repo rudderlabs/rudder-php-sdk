@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 
-require_once(__DIR__ . '/../lib/Segment.php');
+require_once(__DIR__ . '/../lib/Rudder.php');
 
 if (in_array('--help', $argv)) {
   print(usage());
@@ -32,11 +32,11 @@ if (empty($options['writeKey'])) {
   error('writeKey flag required');
 }
 
-Segment::init($options['writeKey']);
+Rudder::init($options['writeKey']);
 
 switch ($options['type']) {
   case 'track':
-    Segment::track(array(
+    Rudder::track(array(
       'userId' => $options['userId'],
       'event' => $options['event'],
       'properties' => parse_json($options['properties'])
@@ -44,14 +44,14 @@ switch ($options['type']) {
     break;
 
   case 'identify':
-    Segment::identify(array(
+    Rudder::identify(array(
       'userId' => $options['userId'],
       'traits' => parse_json($options['traits'])
     ));
     break;
 
   case 'page':
-    Segment::page(array(
+    Rudder::page(array(
       'userId' => $options['userId'],
       'name' => $options['name'],
       'properties' => parse_json($options['properties'])
@@ -59,7 +59,7 @@ switch ($options['type']) {
     break;
 
   case 'group':
-    Segment::identify(array(
+    Rudder::identify(array(
       'userId' => $options['userId'],
       'groupId' => $options['groupId'],
       'traits' => parse_json($options['traits'])
@@ -67,7 +67,7 @@ switch ($options['type']) {
     break;
 
   case 'alias':
-    Segment::alias(array(
+    Rudder::alias(array(
       'userId' => $options['userId'],
       'previousId' => $options['previousId']
     ));
@@ -78,7 +78,7 @@ switch ($options['type']) {
     break;
 }
 
-Segment::flush();
+Rudder::flush();
 
 function usage() {
   return "\n  Usage: analytics --type <track|identify|page|group|alias> [options]\n\n";
