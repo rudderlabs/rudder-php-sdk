@@ -15,7 +15,6 @@ class Rudder_Consumer_ForkCurl extends Rudder_QueueConsumer {
   public function __construct($secret, $options = array()) {
     parent::__construct($secret, $options);
   }
-
   //define getter method for consumer type
   public function getConsumer() {
     return $this->type;
@@ -35,7 +34,7 @@ class Rudder_Consumer_ForkCurl extends Rudder_QueueConsumer {
     $payload = escapeshellarg($payload);
     $secret = escapeshellarg($this->secret);
 
-    $protocol = "https://";
+    $protocol = $this->ssl() ? 'https://' : 'http://';
     if ($this->dataPlaneUrl) {
       $dataPlaneUrl = $this->dataPlaneUrl;
     } else {
@@ -43,7 +42,6 @@ class Rudder_Consumer_ForkCurl extends Rudder_QueueConsumer {
     }
     $path = "/v1/batch";
     $url = $protocol . $dataPlaneUrl . $path;
-
     $cmd = "curl -u ${secret}: -X POST -H 'Content-Type: application/json'";
 
     $tmpfname = "";

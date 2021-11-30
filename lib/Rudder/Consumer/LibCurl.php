@@ -13,8 +13,7 @@ class Rudder_Consumer_LibCurl extends Rudder_QueueConsumer {
    */
   public function __construct($secret, $options = array()) {
     parent::__construct($secret, $options);
-  }
-
+  } 
   //define getter method for consumer type
   public function getConsumer() {
     return $this->type;
