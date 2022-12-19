@@ -78,7 +78,7 @@ class Rudder_Consumer_LibCurl extends Rudder_QueueConsumer {
       $library = $messages[0]['context']['library'];
       $libName = $library['name'];
       $libVersion = $library['version'];
-      $header[] = "User-Agent: ${libName}/${libVersion}";
+      $header[] = "User-Agent: {$libName}/{$libVersion}";
 
       curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
       curl_setopt($ch, CURLOPT_URL, $url);

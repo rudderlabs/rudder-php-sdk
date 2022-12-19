@@ -42,7 +42,7 @@ class Rudder_Consumer_ForkCurl extends Rudder_QueueConsumer {
     }
     $path = "/v1/batch";
     $url = $protocol . $dataPlaneUrl . $path;
-    $cmd = "curl -u ${secret}: -X POST -H 'Content-Type: application/json'";
+    $cmd = "curl -u {$secret}: -X POST -H 'Content-Type: application/json'";
 
     $tmpfname = "";
     $cmd.= " -d " . $payload;
@@ -63,7 +63,7 @@ class Rudder_Consumer_ForkCurl extends Rudder_QueueConsumer {
     $library = $messages[0]['context']['library'];
     $libName = $library['name'];
     $libVersion = $library['version'];
-    $cmd.= " -H 'User-Agent: ${libName}/${libVersion}'";
+    $cmd.= " -H 'User-Agent: {$libName}/{$libVersion}'";
 
     if (!$this->debug()) {
       $cmd .= " > /dev/null 2>&1 &";
