@@ -1,99 +1,120 @@
 <?php
 
-require_once __DIR__ . "/../lib/Rudder/Client.php";
+declare(strict_types=1);
 
-class ConsumerForkCurlTest extends PHPUnit_Framework_TestCase
+namespace Rudder\Test;
+
+use Dotenv\Dotenv;
+use PHPUnit\Framework\TestCase;
+use Rudder\Client;
+
+class ConsumerForkCurlTest extends TestCase
 {
-  private $client;
+    private Client $client;
 
-  public function setUp()
-  {
-    date_default_timezone_set("UTC");
-    $this->client = new Rudder_Client(
-      "OnMMoZ6YVozrgSBeZ9FpkC0ixH0ycYZn",
-      array(
-        "consumer" => "fork_curl",
-        "debug" => true,
-      )
-    );
-  }
+    public function setUp(): void
+    {
+        // Looking for .env at the root directory
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+        $dotenv->load();
 
-  public function testTrack()
-  {
-    $this->assertTrue($this->client->track(array(
-      "userId" => "some-user",
-      "event" => "PHP Fork Curl'd\" Event",
-    )));
-  }
+        // Retrieve env variables
+        $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
+        $__DATAPLANE_URL__ = $_ENV['DATAPLANE_URL'];
 
-  public function testIdentify()
-  {
-    $this->assertTrue($this->client->identify(array(
-      "userId" => "user-id",
-      "traits" => array(
-        "loves_php" => false,
-        "type" => "consumer fork-curl test",
-        "birthday" => time(),
-      ),
-    )));
-  }
+        date_default_timezone_set('UTC');
+        $this->client = new Client(
+            $__WRITE_KEY__,
+            [
+                'consumer' => 'fork_curl',
+                'debug'    => true,
+            ]
+        );
+    }
 
-  public function testGroup()
-  {
-    $this->assertTrue($this->client->group(array(
-      "userId" => "user-id",
-      "groupId" => "group-id",
-      "traits" => array(
-        "type" => "consumer fork-curl test",
-      ),
-    )));
-  }
+    public function testTrack(): void
+    {
+        self::assertTrue($this->client->track([
+            'userId' => 'some-user',
+            'event'  => "PHP Fork Curl'd\" Event",
+        ]));
+    }
 
-  public function testPage()
-  {
-    $this->assertTrue($this->client->page(array(
-      "userId" => "userId",
-      "name" => "analytics-php",
-      "category" => "fork-curl",
-      "properties" => array(
-        "url" => "https://a.url/",
-      ),
-    )));
-  }
+    public function testIdentify(): void
+    {
+        self::assertTrue($this->client->identify([
+            'userId' => 'user-id',
+            'traits' => [
+                'loves_php' => false,
+                'type'      => 'consumer fork-curl test',
+                'birthday'  => time(),
+            ],
+        ]));
+    }
 
-  public function testScreen()
-  {
-    $this->assertTrue($this->client->page(array(
-      "anonymousId" => "anonymous-id",
-      "name" => "grand theft auto",
-      "category" => "fork-curl",
-      "properties" => array(),
-    )));
-  }
+    public function testGroup(): void
+    {
+        self::assertTrue($this->client->group([
+            'userId'  => 'user-id',
+            'groupId' => 'group-id',
+            'traits'  => [
+                'type' => 'consumer fork-curl test',
+            ],
+        ]));
+    }
 
-  public function testAlias()
-  {
-    $this->assertTrue($this->client->alias(array(
-      "previousId" => "previous-id",
-      "userId" => "user-id",
-    )));
-  }
+    public function testPage(): void
+    {
+        self::assertTrue($this->client->page([
+            'userId'     => 'userId',
+            'name'       => 'analytics-php',
+            'category'   => 'fork-curl',
+            'properties' => ['url' => 'https://a.url/'],
+        ]));
+    }
 
-  public function testRequestCompression() {
-    $options = array(
-      "compress_request" => true,
-      "consumer" => "fork_curl",
-      "debug" => true,
-    );
+    public function testScreen(): void
+    {
+        self::assertTrue($this->client->page([
+            'anonymousId' => 'anonymous-id',
+            'name'        => 'grand theft auto',
+            'category'    => 'fork-curl',
+            'properties'  => [],
+        ]));
+    }
 
-    // Create client and send Track message
-    $client = new Rudder_Client("OnMMoZ6YVozrgSBeZ9FpkC0ixH0ycYZn", $options);
-    $result = $client->track(array(
-      "userId" => "some-user",
-      "event" => "PHP Fork Curl'd\" Event with compression",
-    ));
-    $client->__destruct();
+    public function testAlias(): void
+    {
+        self::assertTrue($this->client->alias([
+            'previousId' => 'previous-id',
+            'userId'     => 'user-id',
+        ]));
+    }
 
-    $this->assertTrue($result);
-  }
+    public function testRequestCompression(): void
+    {
+        // Looking for .env at the root directory
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+        $dotenv->load();
+
+        // Retrieve env variables
+        $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
+        $__DATAPLANE_URL__ = $_ENV['DATAPLANE_URL'];
+
+        $options = [
+            'compress_request' => true,
+            'consumer'         => 'fork_curl',
+            'debug'            => true,
+        ];
+
+        // Create client and send Track message
+        $client = new Client($__WRITE_KEY__, $options);
+        $result = $client->track([
+            'userId' => 'some-user',
+            'event'  => "PHP Fork Curl'd\" Event with compression",
+        ]);
+        $client->__destruct();
+
+        self::assertTrue($result);
+    }
 }

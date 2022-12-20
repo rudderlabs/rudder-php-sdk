@@ -1,6 +1,7 @@
 # What is RudderStack?
 
-[RudderStack](https://rudderstack.com/) is a **customer data pipeline** tool for collecting, routing and processing data from your websites, apps, cloud tools, and data warehouse.
+[RudderStack](https://rudderstack.com/) is a **customer data pipeline** tool for collecting, routing and processing data 
+from your websites, apps, cloud tools, and data warehouse.
 
 More information on RudderStack can be found [here](https://github.com/rudderlabs/rudder-server).
 
@@ -12,7 +13,9 @@ git clone https://github.com/rudderlabs/rudder-php-sdk /my/app/folders/
 
 ## Initialize the ```Client```
 ```
-require_once("/path/to/lib/Rudder.php");
+use Rudder\Rudder;
+
+require_once realpath(__DIR__ . '/vendor/autoload.php');
 
 Rudder::init(WRITE_KEY, array(
   "data_plane_url" => DATA_PLANE_URL,
@@ -35,4 +38,5 @@ Rudder::track(array(
 ```
 
 ## Contact Us
-If you come across any issues while configuring or using this SDK, feel free to start a conversation on our [Slack](https://resources.rudderstack.com/join-rudderstack-slack) channel. We will be happy to help you.
+If you come across any issues while configuring or using this SDK, feel free to start a conversation on our 
+[Slack](https://resources.rudderstack.com/join-rudderstack-slack) channel. We will be happy to help you.
