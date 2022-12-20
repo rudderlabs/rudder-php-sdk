@@ -24,10 +24,6 @@ class Socket extends QueueConsumer
             $options['timeout'] = 5;
         }
 
-        if (!isset($options['data_plane_url'])) {
-            $options['data_plane_url'] = 'hosted.rudderlabs.com';
-        }
-
         if (!isset($options['tls'])) {
             $options['tls'] = '';
         }
@@ -46,7 +42,7 @@ class Socket extends QueueConsumer
         $payload = $this->payload($batch);
         $payload = json_encode($payload);
 
-        $body = $this->createBody($this->dataPlaneUrl, $payload);
+        $body = $this->createBody($this->host, $payload);
         if ($body === false) {
             return false;
         }
@@ -55,7 +51,7 @@ class Socket extends QueueConsumer
     }
 
     /**
-     * Open a connection to the target dataPlaneUrl host.
+     * Open a connection to the target host.
      *
      * @return false|resource
      */
@@ -66,12 +62,13 @@ class Socket extends QueueConsumer
         }
 
         $protocol = $this->options['tls'] ? 'tls' : 'ssl';
+        $host = $this->host;
         $port = 443;
         $timeout = $this->options['timeout'];
 
         // Open our socket to the API Server.
         $socket = @pfsockopen(
-            $protocol . '://' . $this->dataPlaneUrl,
+            $protocol . '://' . $host,
             $port,
             $errno,
             $errstr,
@@ -85,6 +82,51 @@ class Socket extends QueueConsumer
         }
 
         return $socket;
+    }
+
+    /**
+     * Create the request body.
+     *
+     * @param string $host
+     * @param string $content
+     * @return string body
+     */
+    private function createBody(string $host, string $content)
+    {
+        $req = "POST /v1/batch HTTP/1.1\r\n";
+        $req .= 'Host: ' . $host . "\r\n";
+        $req .= "Content-Type: application/json\r\n";
+        $req .= 'Authorization: Basic ' . base64_encode($this->secret . ':') . "\r\n";
+        $req .= "Accept: application/json\r\n";
+
+        // Send user agent in the form of {library_name}/{library_version} as per RFC 7231.
+        $content_json = json_decode($content, true);
+        $library = $content_json['batch'][0]['context']['library'];
+        $libName = $library['name'];
+        $libVersion = $library['version'];
+        $req .= "User-Agent: $libName/$libVersion\r\n";
+
+        // Compress content if compress_request is true
+        if ($this->compress_request) {
+            $content = gzencode($content);
+
+            $req .= "Content-Encoding: gzip\r\n";
+        }
+
+        $req .= 'Content-length: ' . strlen($content) . "\r\n";
+        $req .= "\r\n";
+        $req .= $content;
+
+        // Verify payload size is below 512KB
+        if (strlen($req) >= 500 * 1024) {
+            $msg = 'Payload size is larger than 512KB';
+            /** @noinspection ForgottenDebugOutputInspection */
+            error_log('[Analytics][' . $this->type . '] ' . $msg);
+
+            return false;
+        }
+
+        return $req;
     }
 
     /**
@@ -142,7 +184,7 @@ class Socket extends QueueConsumer
                 usleep($backoff * 1000);
             } elseif ($statusCode >= 400) {
                 if ($this->debug()) {
-                    $this->handleError($statusCode, $res['message']);
+                    $this->handleError(intval($res['status']), $res['message']);
                 }
 
                 break;
@@ -154,51 +196,6 @@ class Socket extends QueueConsumer
         }
 
         return $success;
-    }
-
-    /**
-     * Create the request body.
-     *
-     * @param string $dataPlaneUrl
-     * @param string $content
-     * @return string body
-     */
-    private function createBody(string $dataPlaneUrl, string $content)
-    {
-        $req = "POST /v1/batch HTTP/1.1\r\n";
-        $req .= 'dataPlaneUrl: ' . $dataPlaneUrl . "\r\n";
-        $req .= "Content-Type: application/json\r\n";
-        $req .= 'Authorization: Basic ' . base64_encode($this->secret . ':') . "\r\n";
-        $req .= "Accept: application/json\r\n";
-
-        // Send user agent in the form of {library_name}/{library_version} as per RFC 7231.
-        $content_json = json_decode($content, true);
-        $library = $content_json['batch'][0]['context']['library'];
-        $libName = $library['name'];
-        $libVersion = $library['version'];
-        $req .= "User-Agent: $libName/$libVersion\r\n";
-
-        // Compress content if compress_request is true
-        if ($this->compress_request) {
-            $content = gzencode($content);
-
-            $req .= "Content-Encoding: gzip\r\n";
-        }
-
-        $req .= 'Content-length: ' . strlen($content) . "\r\n";
-        $req .= "\r\n";
-        $req .= $content;
-
-        // Verify payload size is below 512KB
-        if (strlen($req) >= 500 * 1024) {
-            $msg = 'Payload size is larger than 512KB';
-            /** @noinspection ForgottenDebugOutputInspection */
-            error_log('[Analytics][' . $this->type . '] ' . $msg);
-
-            return false;
-        }
-
-        return $req;
     }
 
     /**

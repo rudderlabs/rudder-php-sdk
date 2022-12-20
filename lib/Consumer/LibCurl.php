@@ -26,7 +26,7 @@ class LibCurl extends QueueConsumer
         }
 
         $path = '/v1/batch';
-        $url = $this->protocol . $this->dataPlaneUrl . $path;
+        $url = $this->protocol . $this->host . $path;
 
         $backoff = 100; // Set initial waiting time to 100ms
 

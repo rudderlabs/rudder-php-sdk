@@ -19,6 +19,7 @@ abstract class QueueConsumer extends Consumer
     protected int $max_batch_size_bytes = 512000; //500kb
     protected int $max_item_size_bytes = 32000; // 32kb
     protected int $maximum_backoff_duration = 10000; // Set maximum waiting limit to 10s
+    protected string $host = '';
     protected string $dataPlaneUrl = 'hosted.rudderlabs.com';
     protected bool $compress_request = false;
     protected int $flush_interval_in_mills = 10000; //frequency in milliseconds to send data, default 10
@@ -60,6 +61,14 @@ abstract class QueueConsumer extends Consumer
 
         if (isset($options['data_plane_url'])) {
             $this->dataPlaneUrl = $options['data_plane_url'];
+        }
+        $this->host = $this->dataPlaneUrl;
+
+        if (isset($options['host'])) {
+            $this->host = $options['host'];
+            $msg = 'WARNING: host option to be deprecated soon, please use new option data_plane_url';
+            error_log('[Analytics][' . $this->type . '] ' . $msg);
+            $this->dataPlaneUrl = $this->host;
         }
 
         if (isset($options['compress_request'])) {
@@ -104,7 +113,7 @@ abstract class QueueConsumer extends Consumer
             $batch = array_splice($this->queue, 0, min($this->flush_at, $count));
 
             if (mb_strlen(serialize($batch), '8bit') >= $this->max_batch_size_bytes) {
-                $msg = 'Batch size is larger than ' . ($this->max_batch_size_bytes / 1000) . 'KB';
+                $msg = 'Batch size is larger than 512KB';
                 error_log('[Analytics][' . $this->type . '] ' . $msg);
 
                 return false;

@@ -21,7 +21,6 @@ class ConsumerFileTest extends TestCase
 
         // Retrieve env variables
         $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
-        $__DATAPLANE_URL__ = $_ENV['DATAPLANE_URL'];
 
         date_default_timezone_set('UTC');
         $this->clearLog();
@@ -141,6 +140,7 @@ class ConsumerFileTest extends TestCase
                 'event'  => 'event',
             ]);
         }
+        // TODO: fix this unit test as we get 404 for invalid write key
         exec("php --define date.timezone=UTC examples/Send.php --secret $__WRITE_KEY__ --file /tmp/analytics.log", $output);
         self::assertSame('sent 200 from 200 requests successfully', trim($output[0]));
         self::assertFileDoesNotExist($this->filename);
@@ -170,8 +170,15 @@ class ConsumerFileTest extends TestCase
 
     public function testFileSecurityCustom(): void
     {
+        // Looking for .env at the root directory
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+        $dotenv->load();
+
+        // Retrieve env variables
+        $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
+
         $client = new Client(
-            'testsecret',
+            $__WRITE_KEY__,
             [
                 'consumer'        => 'file',
                 'filename'        => $this->filename,
@@ -184,8 +191,15 @@ class ConsumerFileTest extends TestCase
 
     public function testFileSecurityDefaults(): void
     {
+        // Looking for .env at the root directory
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+        $dotenv->load();
+
+        // Retrieve env variables
+        $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
+
         $client = new Client(
-            'testsecret',
+            $__WRITE_KEY__,
             [
                 'consumer' => 'file',
                 'filename' => $this->filename,

@@ -24,7 +24,7 @@ class ForkCurl extends QueueConsumer
         $secret = escapeshellarg($this->secret);
 
         $path = '/v1/batch';
-        $url = $this->protocol . $this->dataPlaneUrl . $path;
+        $url = $this->protocol . $this->host . $path;
 
         $cmd = "curl -u $secret: -X POST -H 'Content-Type: application/json'";
 

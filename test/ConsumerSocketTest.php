@@ -22,7 +22,6 @@ class ConsumerSocketTest extends TestCase
 
         // Retrieve env variables
         $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
-        $__DATAPLANE_URL__ = $_ENV['DATAPLANE_URL'];
 
         date_default_timezone_set('UTC');
         $this->client = new Client(
@@ -153,15 +152,20 @@ class ConsumerSocketTest extends TestCase
 
     public function testProductionProblems(): void
     {
-        $error_handler = function () {
-            throw new Exception('Was called');
-        };
+        // Looking for .env at the root directory
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+        $dotenv->load();
+
+        // Retrieve env variables
+        $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
 
         $client = new Client(
-            'x',
+            $__WRITE_KEY__,
             [
                 'consumer'      => 'socket',
-                'error_handler' => $error_handler,
+                'error_handler' => function () {
+                    throw new Exception('Was called');
+                },
             ]
         );
 
@@ -172,19 +176,24 @@ class ConsumerSocketTest extends TestCase
 
     public function testDebugProblems(): void
     {
-        $error_handler = function ($errno, $errmsg) {
-            if ($errno !== 400) {
-                throw new Exception('Response is not 400');
-            }
-        };
+        // Looking for .env at the root directory
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+        $dotenv->load();
+
+        // Retrieve env variables
+        $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
 
         $options = [
             'debug'         => true,
             'consumer'      => 'socket',
-            'error_handler' => $error_handler,
+            'error_handler' => function ($errno, $errmsg) {
+                if ($errno !== 400) {
+                    throw new Exception('Response is not 400');
+                }
+            },
         ];
 
-        $client = new Client('x', $options);
+        $client = new Client($__WRITE_KEY__, $options);
 
         // Should error out with debug on.
         self::assertTrue($client->track(['user_id' => 'some-user', 'event' => 'Socket PHP Event']));
@@ -193,12 +202,19 @@ class ConsumerSocketTest extends TestCase
 
     public function testLargeMessage(): void
     {
+        // Looking for .env at the root directory
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+        $dotenv->load();
+
+        // Retrieve env variables
+        $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
+
         $options = [
             'debug'    => true,
             'consumer' => 'socket',
         ];
 
-        $client = new Client('testsecret', $options);
+        $client = new Client($__WRITE_KEY__, $options);
 
         $big_property = str_repeat('a', 10000);
 
@@ -217,12 +233,19 @@ class ConsumerSocketTest extends TestCase
 
     public function testLargeMessageSizeError(): void
     {
+        // Looking for .env at the root directory
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+        $dotenv->load();
+
+        // Retrieve env variables
+        $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
+
         $options = [
             'debug'    => true,
             'consumer' => 'socket',
         ];
 
-        $client = new Client('testlargesize', $options);
+        $client = new Client($__WRITE_KEY__, $options);
 
         $big_property = str_repeat('a', 32 * 1024);
 
@@ -241,16 +264,22 @@ class ConsumerSocketTest extends TestCase
 
     public function testConnectionError(): void
     {
-        $error_handler = function ($errno, $errmsg) {
-            throw new RuntimeException($errmsg, $errno);
-        };
+        // Looking for .env at the root directory
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+        $dotenv->load();
+
+        // Retrieve env variables
+        $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
+
         $this->expectException(RuntimeException::class);
         $client = new Client(
-            'x',
+            $__WRITE_KEY__,
             [
-                'consumer'      => 'socket',
-                'dataPlaneUrl' => 'hosted.rudderlabs.com',
-                'error_handler' => $error_handler,
+                'consumer'          => 'socket',
+                'data_plane_url'    => 'hosted.rudderlabs.com.dummy',
+                'error_handler'     => function ($errno, $errmsg) {
+                    throw new RuntimeException($errmsg, $errno);
+                },
             ]
         );
 
@@ -260,16 +289,22 @@ class ConsumerSocketTest extends TestCase
 
     public function testRequestCompression(): void
     {
-        $error_handler = function ($errno, $errmsg) {
-            throw new RuntimeException($errmsg, $errno);
-        };
+        // Looking for .env at the root directory
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+        $dotenv->load();
+
+        // Retrieve env variables
+        $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
+
         $options = [
             'compress_request' => true,
             'consumer'         => 'socket',
-            'error_handler'    => $error_handler,
+            'error_handler'    => function ($errno, $errmsg) {
+                throw new RuntimeException($errmsg, $errno);
+            },
         ];
 
-        $client = new Client('x', $options);
+        $client = new Client($__WRITE_KEY__, $options);
 
         # Should error out with debug on.
         self::assertTrue($client->track(['user_id' => 'some-user', 'event' => 'Socket PHP Event']));

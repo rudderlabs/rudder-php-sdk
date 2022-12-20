@@ -21,7 +21,6 @@ class ConsumerLibCurlTest extends TestCase
 
         // Retrieve env variables
         $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
-        $__DATAPLANE_URL__ = $_ENV['DATAPLANE_URL'];
 
         date_default_timezone_set('UTC');
         $this->client = new Client(
@@ -94,17 +93,22 @@ class ConsumerLibCurlTest extends TestCase
 
     public function testRequestCompression(): void
     {
-        $error_handler = function ($errno, $errmsg) {
-            throw new RuntimeException($errmsg, $errno);
-        };
+        // Looking for .env at the root directory
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+        $dotenv->load();
+
+        // Retrieve env variables
+        $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
 
         $options = [
             'compress_request' => true,
             'consumer'         => 'lib_curl',
-            'error_handler'    => $error_handler,
+            'error_handler'    => function ($errno, $errmsg) {
+                throw new RuntimeException($errmsg, $errno);
+            },
         ];
 
-        $client = new Client('x', $options);
+        $client = new Client($__WRITE_KEY__, $options);
 
         # Should error out with debug on.
         self::assertTrue($client->track(['user_id' => 'some-user', 'event' => 'Socket PHP Event']));
@@ -113,12 +117,19 @@ class ConsumerLibCurlTest extends TestCase
 
     public function testLargeMessageSizeError(): void
     {
+        // Looking for .env at the root directory
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+        $dotenv->load();
+
+        // Retrieve env variables
+        $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
+
         $options = [
             'debug'    => true,
             'consumer' => 'lib_curl',
         ];
 
-        $client = new Client('testlargesize', $options);
+        $client = new Client($__WRITE_KEY__, $options);
 
         $big_property = str_repeat('a', 32 * 1024);
 

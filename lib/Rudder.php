@@ -11,79 +11,22 @@ class Rudder
     /**
      * Initializes the default client to use. Uses the libcurl consumer by default.
      *
-     * @param string $secret your project's secret key
+     * @param string $writeKey your project's write key
      * @param array $options passed straight to the client
      *
      * @throws RudderException
      */
-    public static function init(string $secret, array $options = []): void
+    public static function init(string $writeKey, array $options = []): void
     {
-        self::assert($secret, 'Rudder::init() requires secret');
+        self::assert($writeKey, 'Rudder::init() requires write key');
+        $dataPlaneUrl = 'hosted.rudderlabs.com';
 
-        // Rudder: support for data_plane_url
-        $optionsClone = unserialize(serialize($options));
-        // check if ssl is here --> check if it is http or https
-        if (isset($optionsClone['data_plane_url'])) {
-            $optionsClone['data_plane_url'] = self::handleSSL($optionsClone);
-        } else {
-            // log error
-            $errstr = ("'data_plane_url' option is required");
-            throw new RudderException($errstr);
+        if (isset($options['data_plane_url'])) {
+            $dataPlaneUrl = self::handleSSL($options['data_plane_url'], $options['ssl'] ?? true);
         }
+        $options['data_plane_url'] = $dataPlaneUrl;
 
-        self::$client = new Client($secret, $optionsClone);
-    }
-
-    /**
-     *
-     * Rudder
-     * checks the dataplane url format only is ssl key is present
-     * @param array $options passed straight to the client
-     *
-     * @throws RudderException
-     */
-    private static function handleSSL(array $options = [])
-    {
-        $urlComponentArray = parse_url($options['data_plane_url']);
-
-        if (!(isset($urlComponentArray['scheme']))) {
-            $options['data_plane_url'] = 'https://' . $options['data_plane_url'] ;
-        }
-
-        if (filter_var($options['data_plane_url'], FILTER_VALIDATE_URL)) {
-            $protocol = 'https';
-            if (isset($options['ssl']) && $options['ssl'] == false) {
-                $protocol = 'http';
-            }
-            $urlWithoutProtocol = self::handleUrl($options['data_plane_url'], $protocol);
-            return $urlWithoutProtocol;
-        } else {
-            // log error
-            $errstr = ("'data_plane_url' input is invalid");
-            throw new RudderException($errstr);
-        }
-    }
-
-    /**
-     *
-     * Rudder
-     * checks the dataplane url format only is ssl key is present
-     * @param string $data_plane_url dataplane url entered in the init() function
-     * @param string $protocol the protocol needs to be used according to the ssl configuration
-     *
-     * @throws RudderException
-     */
-    private static function handleUrl($data_plane_url, $protocol)
-    {
-        $urlComponentArray = parse_url($data_plane_url);
-        if ($urlComponentArray['scheme'] == $protocol) {
-            // if the protocol does not exist then error is not thrown, rather added with https:// later on
-            return preg_replace('(^https?://)', '', $data_plane_url);
-        } else {
-            // log error
-            $errstr = ('Data plane URL and SSL options are incompatible with each other');
-            throw new RudderException($errstr);
-        }
+        self::$client = new Client($writeKey, $options);
     }
 
     /**
@@ -91,6 +34,7 @@ class Rudder
      *
      * @param mixed $value
      * @param string $msg
+     *
      * @throws RudderException
      */
     private static function assert($value, string $msg): void
@@ -137,6 +81,7 @@ class Rudder
      *
      * @param array $message
      * @param string $type
+     *
      * @throws RudderException
      */
     public static function validate(array $message, string $type): void
@@ -241,6 +186,59 @@ class Rudder
         self::checkClient();
 
         return self::$client->flush();
+    }
+
+    /**
+     *
+     * Rudder
+     * checks the dataplane url format only is ssl key is present
+     * @param string $data_plane_url passed straight to the client
+     * @param bool $ssl passed straight to the client
+     *
+     * @throws RudderException
+     */
+    private static function handleSSL(string $data_plane_url, bool $ssl): string
+    {
+        $urlComponentArray = parse_url($data_plane_url);
+
+        if (!(isset($urlComponentArray['scheme']))) {
+            $data_plane_url = 'https://' . $data_plane_url ;
+        }
+
+        if (filter_var($data_plane_url, FILTER_VALIDATE_URL)) {
+            $protocol = 'https';
+            if (isset($ssl) && $ssl == false) {
+                $protocol = 'http';
+            }
+            $urlWithoutProtocol = self::handleUrl($data_plane_url, $protocol);
+            return $urlWithoutProtocol;
+        } else {
+            // log error
+            $errstr = ("'data_plane_url' input is invalid");
+            throw new RudderException($errstr);
+        }
+    }
+
+    /**
+     *
+     * Rudder
+     * checks the dataplane url format only is ssl key is present
+     * @param string $data_plane_url dataplane url entered in the init() function
+     * @param string $protocol the protocol needs to be used according to the ssl configuration
+     *
+     * @throws RudderException
+     */
+    private static function handleUrl(string $data_plane_url, string $protocol): string
+    {
+        $urlComponentArray = parse_url($data_plane_url);
+        if ($urlComponentArray['scheme'] == $protocol) {
+            // if the protocol does not exist then error is not thrown, rather added with https:// later on
+            return preg_replace('(^https?://)', '', $data_plane_url);
+        } else {
+            // log error
+            $errstr = ('Data plane URL and SSL options are incompatible with each other');
+            throw new RudderException($errstr);
+        }
     }
 }
 
