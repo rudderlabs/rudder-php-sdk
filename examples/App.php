@@ -16,7 +16,7 @@ $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
 $__DATAPLANE_URL__ = $_ENV['DATAPLANE_URL'];
 $__CONSUMER__ = $_ENV['CONSUMER'];
 
-echo "Starting App.php with\n\nconsumer: $__CONSUMER__ \n\nwrite key: $__WRITE_KEY__ \n\n";
+echo "Starting App.php with:\nconsumer: $__CONSUMER__ \nwrite key: $__WRITE_KEY__ \n\n";
 
 Rudder::init(
     $__WRITE_KEY__,
@@ -25,7 +25,7 @@ Rudder::init(
         'consumer'       => $__CONSUMER__,
         'debug'          => true,
         'max_queue_size' => 10000,
-        'flush_at'     => 1,
+        'flush_at'     => 2,
     ]
 );
 
@@ -38,6 +38,11 @@ Rudder::identify([
     ],
 ]);
 
+Rudder::track([
+    'userId' => '2sfjej334',
+    'event' => 'Dummy track',
+]);
+
 Rudder::identify([
     'userId' => '4567dfgbhnm',
     'traits' => [
@@ -45,4 +50,9 @@ Rudder::identify([
         'name' => 'test name',
         'friends' => 25,
     ],
+]);
+
+Rudder::track([
+    'userId' => '4567dfgbhnm',
+    'event' => 'Dummy track with new userId',
 ]);

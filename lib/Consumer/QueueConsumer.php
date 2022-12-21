@@ -21,7 +21,7 @@ abstract class QueueConsumer extends Consumer
     protected int $maximum_backoff_duration = 10000; // Set maximum waiting limit to 10s
     protected string $host = '';
     protected string $dataPlaneUrl = 'hosted.rudderlabs.com';
-    protected bool $compress_request = false;
+    protected bool $compress_request = true;
     protected int $flush_interval_in_mills = 10000; //frequency in milliseconds to send data, default 10
     protected int $curl_timeout = 0; // by default this is infinite
     protected int $curl_connecttimeout = 300;

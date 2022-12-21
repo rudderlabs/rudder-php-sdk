@@ -28,6 +28,8 @@ class ForkCurl extends QueueConsumer
 
         $cmd = "curl -u $secret: -X POST -H 'Content-Type: application/json'";
 
+        $cmd .= " -H 'channel: server'";
+
         $tmpfname = '';
         if ($this->compress_request) {
             // Compress request to file

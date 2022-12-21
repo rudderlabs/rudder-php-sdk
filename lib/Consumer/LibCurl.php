@@ -43,6 +43,7 @@ class LibCurl extends QueueConsumer
             // set variables for headers
             $header = [];
             $header[] = 'Content-Type: application/json';
+            $header[] = 'channel: server';
 
             if ($this->compress_request) {
                 $header[] = 'Content-Encoding: gzip';
