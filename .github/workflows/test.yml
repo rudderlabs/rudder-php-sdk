@@ -49,6 +49,13 @@ jobs:
         run: |
           make tests
 
+      - name: Upload reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: Reports
+          path: |
+            build/logs    
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
