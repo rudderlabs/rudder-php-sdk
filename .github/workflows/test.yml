@@ -19,6 +19,33 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup PHP with tools
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          tools: composer, pecl, phpcs, phpunit, php-cs-fixer, phpunit,
+          coverage: pcov
+
+      - name: Setup PCOV
+        run: |
+          composer require pcov/clobber
+          vendor/bin/pcov clobber
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: |
+          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist
+
       - name: Execute linting
         run: |
           make lint
