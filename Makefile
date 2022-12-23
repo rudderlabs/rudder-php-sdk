@@ -14,7 +14,7 @@ composer.phar:
 
 tests: dependencies
 	@mkdir -p build/logs
-	@vendor/bin/phpunit --colors --coverage-xml build/logs/coverage
+	@vendor/bin/phpunit --colors --coverage-clover=build/logs/coverage-result.xml --log-junit=build/logs/execution-result.xml
 	@php ./composer.phar validate
 
 lint: dependencies
