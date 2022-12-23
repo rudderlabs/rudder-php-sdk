@@ -36,3 +36,5 @@ clean:
 		vendor \
 		composer.lock \
 		build
+
+.PHONY: bootstrap release clean
