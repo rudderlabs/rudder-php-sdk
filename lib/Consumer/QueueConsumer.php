@@ -19,8 +19,7 @@ abstract class QueueConsumer extends Consumer
     protected int $max_batch_size_bytes = 512000; //500kb
     protected int $max_item_size_bytes = 32000; // 32kb
     protected int $maximum_backoff_duration = 10000; // Set maximum waiting limit to 10s
-    protected string $host = '';
-    protected string $dataPlaneUrl = 'hosted.rudderlabs.com';
+    protected string $host = 'hosted.rudderlabs.com';
     protected bool $compress_request = true;
     protected int $flush_interval_in_mills = 10000; //frequency in milliseconds to send data, default 10
     protected int $curl_timeout = 0; // by default this is infinite
@@ -59,16 +58,12 @@ abstract class QueueConsumer extends Consumer
             }
         }
 
-        if (isset($options['data_plane_url'])) {
-            $this->dataPlaneUrl = $options['data_plane_url'];
-        }
-        $this->host = $this->dataPlaneUrl;
-
         if (isset($options['host'])) {
-            $this->host = $options['host'];
-            $msg = 'WARNING: host option to be deprecated soon, please use new option data_plane_url';
-            error_log('[Analytics][' . $this->type . '] ' . $msg);
-            $this->dataPlaneUrl = $this->host;
+            $this->host = preg_replace('(^https?://)', '', $options['host']);
+        }
+
+        if (isset($options['data_plane_url'])) {
+            $this->host = preg_replace('(^https?://)', '', $options['data_plane_url']);
         }
 
         if (isset($options['compress_request'])) {
@@ -90,6 +85,10 @@ abstract class QueueConsumer extends Consumer
 
         if (isset($options['curl_connecttimeout'])) {
             $this->curl_connecttimeout = $options['curl_connecttimeout'];
+        }
+
+        if (isset($options['ssl']) && $options['ssl'] == false) {
+            $this->protocol = 'http://';
         }
 
         $this->queue = [];

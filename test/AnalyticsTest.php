@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Rudder\Test;
 
+use donatj\MockWebServer\MockWebServer;
+use donatj\MockWebServer\Response;
 use Dotenv\Dotenv;
 use PHPUnit\Framework\TestCase;
 use Rudder\Rudder;
@@ -11,18 +13,35 @@ use Rudder\RudderException;
 
 class AnalyticsTest extends TestCase
 {
-    public function setUp(): void
+    protected static MockWebServer $server;
+
+    public static function setUpBeforeClass(): void
     {
         // Looking for .env at the root directory
         $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
         $dotenv->load();
-
-        // Retrieve env variables
-        $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
-        $__DATAPLANE_URL__ = $_ENV['DATAPLANE_URL'];
-
         date_default_timezone_set('UTC');
-        Rudder::init($__WRITE_KEY__, ['debug' => true, 'data_plane_url' => $__DATAPLANE_URL__]);
+
+        self::$server = new MockWebServer();
+        self::$server->start();
+        self::$server->setResponseOfPath('/v1/batch', new Response(
+            'OK',
+            [ 'Cache-Control' => 'no-cache' ],
+            200
+        ));
+    }
+
+    public function setUp(): void
+    {
+        $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
+        $__DATAPLANE_URL__ = self::$server->getServerRoot();
+
+        Rudder::init($__WRITE_KEY__, [
+            'compress_request' => false,
+            'ssl' => false,
+            'debug' => true,
+            'data_plane_url' => $__DATAPLANE_URL__,
+        ]);
     }
 
     public function testTrack(): void
@@ -348,5 +367,10 @@ class AnalyticsTest extends TestCase
                 ]
             )
         );
+    }
+
+    public static function tearDownAfterClass(): void
+    {
+        self::$server->stop();
     }
 }

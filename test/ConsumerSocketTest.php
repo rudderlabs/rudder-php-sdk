@@ -14,16 +14,18 @@ class ConsumerSocketTest extends TestCase
 {
     private Client $client;
 
-    public function setUp(): void
+    public static function setUpBeforeClass(): void
     {
         // Looking for .env at the root directory
         $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
         $dotenv->load();
+        date_default_timezone_set('UTC');
+    }
 
-        // Retrieve env variables
+    public function setUp(): void
+    {
         $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
 
-        date_default_timezone_set('UTC');
         $this->client = new Client(
             $__WRITE_KEY__,
             ['consumer' => 'socket']
@@ -114,11 +116,6 @@ class ConsumerSocketTest extends TestCase
 
     public function testShortTimeout(): void
     {
-        // Looking for .env at the root directory
-        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
-        $dotenv->load();
-
-        // Retrieve env variables
         $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
 
         $client = new Client(
@@ -152,11 +149,6 @@ class ConsumerSocketTest extends TestCase
 
     public function testProductionProblems(): void
     {
-        // Looking for .env at the root directory
-        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
-        $dotenv->load();
-
-        // Retrieve env variables
         $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
 
         $client = new Client(
@@ -176,19 +168,14 @@ class ConsumerSocketTest extends TestCase
 
     public function testDebugProblems(): void
     {
-        // Looking for .env at the root directory
-        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
-        $dotenv->load();
-
-        // Retrieve env variables
         $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
 
         $options = [
             'debug'         => true,
             'consumer'      => 'socket',
             'error_handler' => function ($errno, $errmsg) {
-                if ($errno !== 400) {
-                    throw new Exception('Response is not 400');
+                if ($errno !== 404) {
+                    throw new Exception('Response is not 404');
                 }
             },
         ];
@@ -202,11 +189,6 @@ class ConsumerSocketTest extends TestCase
 
     public function testLargeMessage(): void
     {
-        // Looking for .env at the root directory
-        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
-        $dotenv->load();
-
-        // Retrieve env variables
         $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
 
         $options = [
@@ -233,11 +215,6 @@ class ConsumerSocketTest extends TestCase
 
     public function testLargeMessageSizeError(): void
     {
-        // Looking for .env at the root directory
-        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
-        $dotenv->load();
-
-        // Retrieve env variables
         $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
 
         $options = [
@@ -264,11 +241,6 @@ class ConsumerSocketTest extends TestCase
 
     public function testConnectionError(): void
     {
-        // Looking for .env at the root directory
-        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
-        $dotenv->load();
-
-        // Retrieve env variables
         $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
 
         $this->expectException(RuntimeException::class);
@@ -289,11 +261,6 @@ class ConsumerSocketTest extends TestCase
 
     public function testRequestCompression(): void
     {
-        // Looking for .env at the root directory
-        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
-        $dotenv->load();
-
-        // Retrieve env variables
         $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
 
         $options = [
@@ -309,5 +276,9 @@ class ConsumerSocketTest extends TestCase
         # Should error out with debug on.
         self::assertTrue($client->track(['user_id' => 'some-user', 'event' => 'Socket PHP Event']));
         $client->__destruct();
+    }
+
+    public static function tearDownAfterClass(): void
+    {
     }
 }

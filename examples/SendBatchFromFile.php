@@ -29,7 +29,7 @@ if (!isset($args['file'])) {
 
 $file = $args['file'];
 if ($file[0] !== '/') {
-    $file = __DIR__ . 'Send.php/' . $file;
+    $file = __DIR__ . 'SendBatchFromFile.php/' . $file;
 }
 
 /**
@@ -68,6 +68,9 @@ $error_handler = static function ($code, $msg) {
 };
 
 Rudder::init($args['secret'], [
+    'ssl' => $args['ssl'] != 'false',
+    'compress_request' => $args['compress_request'] != 'false',
+    'data_plane_url' => $args['data_plane_url'],
     'debug' => true,
     'error_handler' => $error_handler,
 ]);

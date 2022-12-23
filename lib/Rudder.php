@@ -24,7 +24,15 @@ class Rudder
         if (isset($options['data_plane_url'])) {
             $dataPlaneUrl = self::handleSSL($options['data_plane_url'], $options['ssl'] ?? true);
         }
+
+        if (isset($options['host'])) {
+            $dataPlaneUrl = self::handleSSL($options['host'], $options['ssl'] ?? true);
+            $msg = 'WARNING: host option to be deprecated soon, please use new option data_plane_url';
+            error_log('[Analytics] ' . $msg);
+        }
+
         $options['data_plane_url'] = $dataPlaneUrl;
+        $options['host'] = $dataPlaneUrl;
 
         self::$client = new Client($writeKey, $options);
     }
@@ -236,7 +244,7 @@ class Rudder
             return preg_replace('(^https?://)', '', $data_plane_url);
         } else {
             // log error
-            $errstr = ('Data plane URL and SSL options are incompatible with each other');
+            $errstr = ('Data plane URL protocol and SSL option values are incompatible with each other');
             throw new RudderException($errstr);
         }
     }

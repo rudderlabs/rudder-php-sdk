@@ -87,17 +87,18 @@ abstract class Consumer
      * On an error, try and call the error handler, if debugging output to
      * error_log as well.
      * @param int $code
-     * @param string $msg
+     * @param string | array $msg
      */
-    protected function handleError(int $code, string $msg): void
+    protected function handleError(int $code, $msg): void
     {
+        $message = is_array($msg) ? (join(' ', $msg) ?? '') : $msg;
         if (isset($this->options['error_handler'])) {
             $handler = $this->options['error_handler'];
-            $handler($code, $msg);
+            $handler($code, $message);
         }
 
         if ($this->debug()) {
-            error_log('[Analytics][' . $this->type . '] ' . $msg);
+            error_log('[Analytics][' . $this->type . '] ' . $message);
         }
     }
 

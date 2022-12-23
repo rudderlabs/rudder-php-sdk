@@ -14,7 +14,7 @@ composer.phar:
 
 tests: dependencies
 	@mkdir -p build/logs
-	@vendor/bin/phpunit --colors --coverage-xml build/logs/coverage test/
+	@vendor/bin/phpunit --colors --coverage-xml build/logs/coverage
 	@php ./composer.phar validate
 
 lint: dependencies
@@ -24,10 +24,8 @@ lint: dependencies
 
 release:
 	@printf "releasing ${VERSION}..."
-	@printf '<?php\nglobal $$RUDDER_VERSION;\n$$RUDDER_VERSION = "%b";\n' ${VERSION} > ./lib/Version.php
+	@printf '<?php\n\ndeclare(strict_types=1);\n\nglobal $$RUDDER_VERSION;\n\n$$RUDDER_VERSION = "%b";\n' ${VERSION} > ./lib/Version.php
 	@node -e "var fs = require('fs'), pkg = require('./composer'); pkg.version = '${VERSION}'; fs.writeFileSync('./composer.json', JSON.stringify(pkg, null, '\t'));"
-	@git changelog -t ${VERSION}
-	@git release ${VERSION}
 
 example:
 	@php -f examples/App.php
