@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rudder;
 
+use Ramsey\Uuid\Uuid;
 use Rudder\Consumer\Consumer;
 use Rudder\Consumer\File;
 use Rudder\Consumer\ForkCurl;
@@ -171,17 +172,8 @@ class Client
 
     private static function messageId(): string
     {
-        return sprintf(
-            '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0x0fff) | 0x4000,
-            mt_rand(0, 0x3fff) | 0x8000,
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff)
-        );
+        $uuid = Uuid::uuid4();
+        return $uuid->toString();
     }
 
     /**
