@@ -240,6 +240,7 @@ class ConsumerFileTest extends TestCase
             ]);
         }
 
+        // phpcs:ignore
         exec("php --define date.timezone=UTC examples/SendBatchFromFile.php --secret $__WRITE_KEY__ --compress_request false --ssl false --data_plane_url $__DATAPLANE_URL__ --file $this->filename", $output);
         self::assertSame('sent 200 from 200 requests successfully', trim($output[0]));
         self::assertFileDoesNotExist($this->filename);

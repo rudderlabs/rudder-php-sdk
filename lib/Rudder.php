@@ -35,6 +35,10 @@ class Rudder
         $options['host'] = $dataPlaneUrl;
 
         self::$client = new Client($writeKey, $options);
+
+        if (!function_exists('json_encode')) {
+            throw new RudderException('Rudder needs the JSON PHP extension.');
+        }
     }
 
     /**
@@ -248,8 +252,4 @@ class Rudder
             throw new RudderException($errstr);
         }
     }
-}
-
-if (!function_exists('json_encode')) {
-    throw new RudderException('Rudder needs the JSON PHP extension.');
 }

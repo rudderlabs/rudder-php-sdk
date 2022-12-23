@@ -10,8 +10,6 @@ use Rudder\Consumer\ForkCurl;
 use Rudder\Consumer\LibCurl;
 use Rudder\Consumer\Socket;
 
-require __DIR__ . '/Version.php';
-
 class Client
 {
     protected Consumer $consumer;
@@ -109,6 +107,7 @@ class Client
      */
     private function getDefaultContext(): array
     {
+        require __DIR__ . '/Version.php';
         global $RUDDER_VERSION;
 
         return [

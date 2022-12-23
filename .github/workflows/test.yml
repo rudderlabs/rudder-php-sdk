@@ -43,7 +43,7 @@ jobs:
 
       - name: Execute linting
         run: |
-          make lint
+          make lint-ci
 
       - name: Execute unit tests
         run: |
