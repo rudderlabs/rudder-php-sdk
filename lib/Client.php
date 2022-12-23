@@ -107,7 +107,7 @@ class Client
      */
     private function getDefaultContext(): array
     {
-        require __DIR__ . '/Version.php';
+        require_once __DIR__ . '/Version.php';
         global $RUDDER_VERSION;
 
         return [
