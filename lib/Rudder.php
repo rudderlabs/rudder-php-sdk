@@ -160,7 +160,7 @@ private static function handleUrl($data_plane_url, $protocol) {
   public static function validate($msg, $type){
     $userId = !empty($msg["userId"]);
     $anonId = !empty($msg["anonymousId"]);
-    self::assert($userId || $anonId, "Rudder::${type}() requires userId or anonymousId");
+    self::assert($userId || $anonId, "Rudder::{$type}() requires userId or anonymousId");
   }
 
   /**
