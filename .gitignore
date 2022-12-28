@@ -9,3 +9,4 @@ junit.xml
 .phpunit.result.cache
 /build
 .DS_Store
+.env
