@@ -45,6 +45,16 @@ jobs:
         run: |
           make lint-ci
 
+      - name: Create .env file from secrets
+
+      - name: Create .env file from secrets
+        uses: SpicyPizza/create-envfile@v1.3
+        with:
+          envkey_DATAPLANE_URL: 'hosted.rudderlabs.com'
+          envkey_WRITE_KEY: '123456'
+          envkey_CONSUMER: 'fork_curl'
+          envkey_SSL: false
+
       - name: Execute unit tests
         run: |
           make tests
