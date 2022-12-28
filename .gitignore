@@ -10,3 +10,4 @@ junit.xml
 /build
 .DS_Store
 .env
+*.iml
