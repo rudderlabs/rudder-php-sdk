@@ -46,8 +46,6 @@ jobs:
           make lint-ci
 
       - name: Create .env file from secrets
-
-      - name: Create .env file from secrets
         uses: SpicyPizza/create-envfile@v1.3
         with:
           envkey_DATAPLANE_URL: 'hosted.rudderlabs.com'
