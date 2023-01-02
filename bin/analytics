@@ -1,106 +1,112 @@
 #!/usr/bin/env php
 <?php
 
-require_once(__DIR__ . '/../lib/Rudder.php');
+use Rudder\Rudder;
 
-if (in_array('--help', $argv)) {
-  print(usage());
-  exit;
+require __DIR__ . '/../vendor/autoload.php';
+
+if (in_array('--help', $argv, true)) {
+    print(usage());
+    exit;
 }
 
 date_default_timezone_set('UTC');
 
-$options = getopt('', array(
-  'writeKey::',
-  'type:',
-
-  'userId::',
-
-  'event::',
-  'properties::',
-
-  'name::',
-
-  'traits::',
-
-  'groupId::',
-
-  'previousId::'
-));
+$options = getopt(
+    '',
+    [
+        'writeKey::',
+        'data_plane_url::',
+        'type:',
+        'userId::',
+        'event::',
+        'properties::',
+        'name::',
+        'traits::',
+        'groupId::',
+        'previousId::'
+    ]
+);
 
 if (empty($options['writeKey'])) {
-  error('writeKey flag required');
+    error('writeKey flag required');
 }
 
-Rudder::init($options['writeKey']);
+if (empty($options['data_plane_url'])) {
+    error('dataplane URL flag required');
+}
+
+Rudder::init($options['writeKey'], ['data_plane_url' => $options['data_plane_url']]);
 
 switch ($options['type']) {
-  case 'track':
-    Rudder::track(array(
-      'userId' => $options['userId'],
-      'event' => $options['event'],
-      'properties' => parse_json($options['properties'])
-    ));
-    break;
+    case 'track':
+        Rudder::track(array(
+            'userId'     => $options['userId'],
+            'event'      => $options['event'],
+            'properties' => parse_json($options['properties'])
+        ));
+        break;
 
-  case 'identify':
-    Rudder::identify(array(
-      'userId' => $options['userId'],
-      'traits' => parse_json($options['traits'])
-    ));
-    break;
+    case 'identify':
+        Rudder::identify(array(
+            'userId' => $options['userId'],
+            'traits' => parse_json($options['traits'])
+        ));
+        break;
 
-  case 'page':
-    Rudder::page(array(
-      'userId' => $options['userId'],
-      'name' => $options['name'],
-      'properties' => parse_json($options['properties'])
-    ));
-    break;
+    case 'page':
+        Rudder::page(array(
+            'userId'     => $options['userId'],
+            'name'       => $options['name'],
+            'properties' => parse_json($options['properties'])
+        ));
+        break;
 
-  case 'group':
-    Rudder::identify(array(
-      'userId' => $options['userId'],
-      'groupId' => $options['groupId'],
-      'traits' => parse_json($options['traits'])
-    ));
-    break;
+    case 'group':
+        Rudder::identify(array(
+            'userId'  => $options['userId'],
+            'groupId' => $options['groupId'],
+            'traits'  => parse_json($options['traits'])
+        ));
+        break;
 
-  case 'alias':
-    Rudder::alias(array(
-      'userId' => $options['userId'],
-      'previousId' => $options['previousId']
-    ));
-    break;
+    case 'alias':
+        Rudder::alias(array(
+            'userId'     => $options['userId'],
+            'previousId' => $options['previousId']
+        ));
+        break;
 
-  default:
-    error(usage());
-    break;
+    default:
+        error(usage());
 }
 
 Rudder::flush();
 
-function usage() {
-  return "\n  Usage: analytics --type <track|identify|page|group|alias> [options]\n\n";
+function usage(): string
+{
+    return "\n  Usage: analytics --type <track|identify|page|group|alias> [options]\n\n";
 }
 
-function error($message) {
-  print("$message\n\n");
-  exit(1);
+function error($message): void
+{
+    print("$message\n\n");
+    exit(1);
 }
 
-function parse_json($input) {
-  if (empty($input)) {
-    return null;
-  }
+function parse_json($input): ?array
+{
+    if (empty($input)) {
+        return null;
+    }
 
-  return json_decode($input);
+    return json_decode($input, true);
 }
 
 function parse_timestamp($input) {
-  if (empty($input)) {
-    return null;
-  }
+    if (empty($input)) {
+        return null;
+    }
 
-  return strtotime($input);
+    return strtotime($input);
 }

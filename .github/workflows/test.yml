@@ -1,0 +1,71 @@
+name: 'Unit Tests, Coverage & Sonar'
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['master', 'develop']
+  pull_request:
+    branches: ['master', 'develop']
+    types: ['opened', 'reopened', 'synchronize']
+
+jobs:
+  build:
+    name: 'Unit Tests, Coverage & Sonar'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP with tools
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          tools: composer, pecl, phpcs
+          coverage: pcov
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: |
+          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist
+
+      - name: Execute linting
+        run: |
+          make lint-ci
+
+      - name: Create .env file from secrets
+        uses: SpicyPizza/create-envfile@v1.3
+        with:
+          envkey_DATAPLANE_URL: 'hosted.rudderlabs.com'
+          envkey_WRITE_KEY: '123456'
+          envkey_CONSUMER: 'fork_curl'
+          envkey_SSL: false
+
+      - name: Execute unit tests
+        run: |
+          make tests
+
+      - name: Upload reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: Reports
+          path: |
+            build/logs    
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
