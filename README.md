@@ -24,7 +24,7 @@ Rudder::init(WRITE_KEY, array(
   "consumer"       => "lib_curl",
   "debug"          => true,
   "max_queue_size" => 10000,
-  "batch_size"     => 100
+  "flush_at"     => 100
 ));
 ```
 
