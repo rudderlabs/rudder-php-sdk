@@ -28,8 +28,6 @@ class ForkCurl extends QueueConsumer
 
         $cmd = "curl -u $secret: -X POST -H 'Content-Type: application/json'";
 
-        $cmd .= " -H 'channel: server'";
-
         $tmpfname = '';
         if ($this->compress_request) {
             // Compress request to file
@@ -70,6 +68,14 @@ class ForkCurl extends QueueConsumer
         }
 
         exec($cmd, $output, $exit);
+
+//            Uncomment for local debugging
+//            var_dump('===============================================');
+//            var_dump("Request body:\n");
+//            var_dump(json_encode($body));
+//            var_dump("\nRequest command: " . json_encode($cmd));
+//            var_dump("\nExit code: " . $exit);
+//            var_dump('===============================================');
 
         if ($exit !== 0) {
             $this->handleError($exit, $output);

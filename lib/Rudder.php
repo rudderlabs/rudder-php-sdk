@@ -21,14 +21,14 @@ class Rudder
         self::assert($writeKey, 'Rudder::init() requires write key');
         $dataPlaneUrl = 'hosted.rudderlabs.com';
 
-        if (isset($options['data_plane_url'])) {
-            $dataPlaneUrl = self::handleSSL($options['data_plane_url'], $options['ssl'] ?? true);
-        }
-
         if (isset($options['host'])) {
             $dataPlaneUrl = self::handleSSL($options['host'], $options['ssl'] ?? true);
             $msg = 'WARNING: host option to be deprecated soon, please use new option data_plane_url';
             error_log('[Analytics] ' . $msg);
+        }
+
+        if (isset($options['data_plane_url'])) {
+            $dataPlaneUrl = self::handleSSL($options['data_plane_url'], $options['ssl'] ?? true);
         }
 
         $options['data_plane_url'] = $dataPlaneUrl;

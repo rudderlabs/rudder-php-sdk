@@ -98,7 +98,6 @@ class Socket extends QueueConsumer
         $req .= "Content-Type: application/json\r\n";
         $req .= 'Authorization: Basic ' . base64_encode($this->secret . ':') . "\r\n";
         $req .= "Accept: application/json\r\n";
-        $req .= "channel: server\r\n";
 
         // Send user agent in the form of {library_name}/{library_version} as per RFC 7231.
         $content_json = json_decode($content, true);

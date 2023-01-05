@@ -88,7 +88,7 @@ class Client
         if (!isset($msg['context'])) {
             $msg['context'] = [];
         }
-        $msg['context'] = array_merge($this->getDefaultContext(), $msg['context']);
+        $msg['context'] = array_merge($msg['context'], $this->getDefaultContext());
 
         if (!isset($msg['timestamp'])) {
             $msg['timestamp'] = null;
@@ -98,6 +98,8 @@ class Client
         if (!isset($msg['messageId'])) {
             $msg['messageId'] = self::messageId();
         }
+
+        $msg['channel'] = 'server';
 
         return $msg;
     }

@@ -43,7 +43,6 @@ class LibCurl extends QueueConsumer
             // set variables for headers
             $header = [];
             $header[] = 'Content-Type: application/json';
-            $header[] = 'channel: server';
 
             if ($this->compress_request) {
                 $header[] = 'Content-Encoding: gzip';
@@ -69,6 +68,14 @@ class LibCurl extends QueueConsumer
             }
 
             $responseCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+//            Uncomment for local debugging
+//            var_dump('===============================================');
+//            var_dump("Request body:\n");
+//            var_dump(json_encode($body));
+//            var_dump("\nRequest headers: " . json_encode($header));
+//            var_dump("\nResponse code: " . json_encode($responseCode));
+//            var_dump('===============================================');
 
             //close connection
             curl_close($ch);
