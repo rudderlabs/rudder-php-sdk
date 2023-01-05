@@ -1,40 +1,44 @@
 bootstrap:
-	.buildscript/bootstrap.sh
+	scripts/bootstrap.sh
 
 dependencies: vendor
 
 vendor: composer.phar
 	@php ./composer.phar install
+	@php ./composer.phar require overtrue/phplint --dev;
+	@php ./composer.phar require squizlabs/php_codesniffer --dev;
+	@php ./composer.phar require dealerdirect/phpcodesniffer-composer-installer --dev;
 
 composer.phar:
 	@curl -sS https://getcomposer.org/installer | php
 
-test: lint
-	@vendor/bin/phpunit --colors test/
+tests: dependencies
+	@mkdir -p build/logs
+	@vendor/bin/phpunit --colors --coverage-clover=build/logs/coverage-result.xml --log-junit=build/logs/execution-result.xml
 	@php ./composer.phar validate
 
 lint: dependencies
-	@if php -r 'exit(version_compare(PHP_VERSION, "5.5", ">=") ? 0 : 1);'; \
-	then \
-		php ./composer.phar require overtrue/phplint --dev; \
-		php ./composer.phar require squizlabs/php_codesniffer --dev; \
-		./vendor/bin/phplint; \
-		./vendor/bin/phpcs; \
-	else \
-		printf "Please update PHP version to 5.5 or above for code formatting."; \
-	fi
+	@./vendor/bin/phplint;
+	@./vendor/bin/phpcs;
+
+lint-ci: dependencies
+	@mkdir -p build/logs
+	@./vendor/bin/phplint --xml=build/logs/phplint.xml;
+	@./vendor/bin/phpcs --report=checkstyle --report-file=build/logs/phpcs.xml;
 
 release:
 	@printf "releasing ${VERSION}..."
-	@printf '<?php\nglobal $$RUDDER_VERSION;\n$$RUDDER_VERSION = "%b";\n' ${VERSION} > ./lib/Rudder/Version.php
+	@printf '<?php\n\ndeclare(strict_types=1);\n\nglobal $$RUDDER_VERSION;\n\n$$RUDDER_VERSION = "%b";\n' ${VERSION} > ./lib/Version.php
 	@node -e "var fs = require('fs'), pkg = require('./composer'); pkg.version = '${VERSION}'; fs.writeFileSync('./composer.json', JSON.stringify(pkg, null, '\t'));"
-	@git changelog -t ${VERSION}
-	@git release ${VERSION}
+
+example:
+	@php -f examples/App.php
 
 clean:
 	rm -rf \
 		composer.phar \
 		vendor \
-		composer.lock
+		composer.lock \
+		build
 
-.PHONY: boostrap release clean
+.PHONY: bootstrap release clean

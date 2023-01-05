@@ -1,1 +1,13 @@
+vendor
+composer.phar
+test/analytics.log
+/.vscode
+.phplint-cache
+/.idea
+clover.xml
+junit.xml
+.phpunit.result.cache
+/build
 .DS_Store
+.env
+*.iml

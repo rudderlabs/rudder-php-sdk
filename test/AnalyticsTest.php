@@ -1,249 +1,376 @@
 <?php
 
-require_once __DIR__ . "/../lib/Rudder.php";
+declare(strict_types=1);
 
-class AnalyticsTest extends PHPUnit_Framework_TestCase
+namespace Rudder\Test;
+
+use donatj\MockWebServer\MockWebServer;
+use donatj\MockWebServer\Response;
+use Dotenv\Dotenv;
+use PHPUnit\Framework\TestCase;
+use Rudder\Rudder;
+use Rudder\RudderException;
+
+class AnalyticsTest extends TestCase
 {
-  public function setUp()
-  {
-    date_default_timezone_set("UTC");
-    Rudder::init("oq0vdlg7yi", array("debug" => true));
-  }
+    protected static MockWebServer $server;
 
-  public function testTrack()
-  {
-    $this->assertTrue(Rudder::track(array(
-      "userId" => "john",
-      "event" => "Module PHP Event",
-    )));
-  }
+    public static function setUpBeforeClass(): void
+    {
+        // Looking for .env at the root directory
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+        $dotenv->load();
+        date_default_timezone_set('UTC');
 
-  public function testGroup()
-  {
-    $this->assertTrue(Rudder::group(array(
-      "groupId" => "group-id",
-      "userId" => "user-id",
-      "traits" => array(
-        "plan" => "startup",
-      ),
-    )));
-  }
+        self::$server = new MockWebServer();
+        self::$server->start();
+        self::$server->setResponseOfPath('/v1/batch', new Response(
+            'OK',
+            [ 'Cache-Control' => 'no-cache' ],
+            200
+        ));
+    }
 
-  public function testGroupAnonymous()
-  {
-    $this->assertTrue(Rudder::group(array(
-      "groupId" => "group-id",
-      "anonymousId" => "anonymous-id",
-      "traits" => array(
-        "plan" => "startup",
-      ),
-    )));
-  }
+    public function setUp(): void
+    {
+        $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
+        $__DATAPLANE_URL__ = self::$server->getServerRoot();
 
-  /**
-   * @expectedException \Exception
-   * @expectedExceptionMessage Rudder::group() requires userId or anonymousId
-   */
-  public function testGroupNoUser()
-  {
-    Rudder::group(array(
-      "groupId" => "group-id",
-      "traits" => array(
-        "plan" => "startup",
-      ),
-    ));
-  }
+        Rudder::init($__WRITE_KEY__, [
+            'compress_request' => false,
+            'ssl' => false,
+            'debug' => true,
+            'data_plane_url' => $__DATAPLANE_URL__,
+        ]);
+    }
 
-  public function testMicrotime()
-  {
-    $this->assertTrue(Rudder::page(array(
-      "anonymousId" => "anonymous-id",
-      "name" => "analytics-php-microtime",
-      "category" => "docs",
-      "timestamp" => microtime(true),
-      "properties" => array(
-        "path" => "/docs/libraries/php/",
-        "url" => "https://docs.rudderstack.com",
-      ),
-    )));
-  }
+    public function testTrack(): void
+    {
+        self::assertTrue(
+            Rudder::track(
+                [
+                    'userId' => 'john',
+                    'event'  => 'Module PHP Event',
+                ]
+            )
+        );
+    }
 
-  public function testPage()
-  {
-    $this->assertTrue(Rudder::page(array(
-      "anonymousId" => "anonymous-id",
-      "name" => "analytics-php",
-      "category" => "docs",
-      "properties" => array(
-        "path" => "/docs/libraries/php/",
-        "url" => "https://docs.rudderstack.com",
-      ),
-    )));
-  }
+    public function testGroup(): void
+    {
+        self::assertTrue(
+            Rudder::group(
+                [
+                    'groupId' => 'group-id',
+                    'userId'  => 'user-id',
+                    'traits'  => [
+                        'plan' => 'startup',
+                    ],
+                ]
+            )
+        );
+    }
 
-  public function testBasicPage()
-  {
-    $this->assertTrue(Rudder::page(array(
-      "anonymousId" => "anonymous-id",
-    )));
-  }
+    public function testGroupAnonymous(): void
+    {
+        self::assertTrue(
+            Rudder::group(
+                [
+                    'groupId'     => 'group-id',
+                    'anonymousId' => 'anonymous-id',
+                    'traits'      => [
+                        'plan' => 'startup',
+                    ],
+                ]
+            )
+        );
+    }
 
-  public function testScreen()
-  {
-    $this->assertTrue(Rudder::screen(array(
-      "anonymousId" => "anonymous-id",
-      "name" => "2048",
-      "category" => "game built with php :)",
-      "properties" => array(
-        "points" => 300
-      ),
-    )));
-  }
+    public function testGroupNoUser(): void
+    {
+        $this->expectExceptionMessage('Rudder::group() requires userId or anonymousId');
+        $this->expectException(RudderException::class);
+        Rudder::group(
+            [
+                'groupId' => 'group-id',
+                'traits'  => [
+                    'plan' => 'startup',
+                ],
+            ]
+        );
+    }
 
-  public function testBasicScreen()
-  {
-    $this->assertTrue(Rudder::screen(array(
-      "anonymousId" => "anonymous-id"
-    )));
-  }
+    public function testMicrotime(): void
+    {
+        self::assertTrue(
+            Rudder::page(
+                [
+                    'anonymousId' => 'anonymous-id',
+                    'name'        => 'analytics-php-microtime',
+                    'category'    => 'docs',
+                    'timestamp'   => microtime(true),
+                    'properties'  => [
+                        'path' => '/docs/libraries/php/',
+                        'url'  => 'https://docs.rudderstack.com',
+                    ],
+                ]
+            )
+        );
+    }
 
-  public function testIdentify()
-  {
-    $this->assertTrue(Rudder::identify(array(
-      "userId" => "doe",
-      "traits" => array(
-        "loves_php" => false,
-        "birthday" => time(),
-      ),
-    )));
-  }
+    public function testPage(): void
+    {
+        self::assertTrue(
+            Rudder::page(
+                [
+                    'anonymousId' => 'anonymous-id',
+                    'name'        => 'analytics-php',
+                    'category'    => 'docs',
+                    'properties'  => [
+                        'path' => '/docs/libraries/php/',
+                        'url'  => 'https://docs.rudderstack.com',
+                    ],
+                ]
+            )
+        );
+    }
 
-  public function testEmptyTraits()
-  {
-    $this->assertTrue(Rudder::identify(array(
-      "userId" => "empty-traits",
-    )));
+    public function testBasicPage(): void
+    {
+        self::assertTrue(Rudder::page(['anonymousId' => 'anonymous-id']));
+    }
 
-    $this->assertTrue(Rudder::group(array(
-      "userId" => "empty-traits",
-      "groupId" => "empty-traits",
-    )));
-  }
+    public function testScreen(): void
+    {
+        self::assertTrue(
+            Rudder::screen(
+                [
+                    'anonymousId' => 'anonymous-id',
+                    'name'        => '2048',
+                    'category'    => 'game built with php :)',
+                    'properties'  => [
+                        'points' => 300,
+                    ],
+                ]
+            )
+        );
+    }
 
-  public function testEmptyArrayTraits()
-  {
-    $this->assertTrue(Rudder::identify(array(
-      "userId" => "empty-traits",
-      "traits" => array(),
-    )));
+    public function testBasicScreen(): void
+    {
+        self::assertTrue(Rudder::screen(['anonymousId' => 'anonymous-id']));
+    }
 
-    $this->assertTrue(Rudder::group(array(
-      "userId" => "empty-traits",
-      "groupId" => "empty-traits",
-      "traits" => array(),
-    )));
-  }
+    public function testIdentify(): void
+    {
+        self::assertTrue(
+            Rudder::identify(
+                [
+                    'userId' => 'doe',
+                    'traits' => [
+                        'loves_php' => false,
+                        'birthday'  => time(),
+                    ],
+                ]
+            )
+        );
+    }
 
-  public function testEmptyProperties()
-  {
-    $this->assertTrue(Rudder::track(array(
-      "userId" => "user-id",
-      "event" => "empty-properties",
-    )));
+    public function testEmptyTraits(): void
+    {
+        self::assertTrue(Rudder::identify(['userId' => 'empty-traits']));
 
-    $this->assertTrue(Rudder::page(array(
-      "category" => "empty-properties",
-      "name" => "empty-properties",
-      "userId" => "user-id",
-    )));
-  }
+        self::assertTrue(
+            Rudder::group(
+                [
+                    'userId'  => 'empty-traits',
+                    'groupId' => 'empty-traits',
+                ]
+            )
+        );
+    }
 
-  public function testEmptyArrayProperties()
-  {
-    $this->assertTrue(Rudder::track(array(
-      "userId" => "user-id",
-      "event" => "empty-properties",
-      "properties" => array(),
-    )));
+    public function testEmptyArrayTraits(): void
+    {
+        self::assertTrue(
+            Rudder::identify(
+                [
+                    'userId' => 'empty-traits',
+                    'traits' => [],
+                ]
+            )
+        );
 
-    $this->assertTrue(Rudder::page(array(
-      "category" => "empty-properties",
-      "name" => "empty-properties",
-      "userId" => "user-id",
-      "properties" => array(),
-    )));
-  }
+        self::assertTrue(
+            Rudder::group(
+                [
+                    'userId'  => 'empty-traits',
+                    'groupId' => 'empty-traits',
+                    'traits'  => [],
+                ]
+            )
+        );
+    }
 
-  public function testAlias()
-  {
-    $this->assertTrue(Rudder::alias(array(
-      "previousId" => "previous-id",
-      "userId" => "user-id",
-    )));
-  }
+    public function testEmptyProperties(): void
+    {
+        self::assertTrue(
+            Rudder::track(
+                [
+                    'userId' => 'user-id',
+                    'event'  => 'empty-properties',
+                ]
+            )
+        );
 
-  public function testContextEmpty()
-  {
-    $this->assertTrue(Rudder::track(array(
-      "userId" => "user-id",
-      "event" => "Context Test",
-      "context" => array(),
-    )));
-  }
+        self::assertTrue(
+            Rudder::page(
+                [
+                    'category' => 'empty-properties',
+                    'name'     => 'empty-properties',
+                    'userId'   => 'user-id',
+                ]
+            )
+        );
+    }
 
-  public function testContextCustom()
-  {
-    $this->assertTrue(Rudder::track(array(
-      "userId" => "user-id",
-      "event" => "Context Test",
-      "context" => array(
-        "active" => false,
-      ),
-    )));
-  }
+    public function testEmptyArrayProperties(): void
+    {
+        self::assertTrue(
+            Rudder::track(
+                [
+                    'userId'     => 'user-id',
+                    'event'      => 'empty-properties',
+                    'properties' => [],
+                ]
+            )
+        );
 
-  public function testTimestamps()
-  {
-    $this->assertTrue(Rudder::track(array(
-      "userId" => "user-id",
-      "event" => "integer-timestamp",
-      "timestamp" => (int) mktime(0, 0, 0, date('n'), 1, date('Y')),
-    )));
+        self::assertTrue(
+            Rudder::page(
+                [
+                    'category'   => 'empty-properties',
+                    'name'       => 'empty-properties',
+                    'userId'     => 'user-id',
+                    'properties' => [],
+                ]
+            )
+        );
+    }
 
-    $this->assertTrue(Rudder::track(array(
-      "userId" => "user-id",
-      "event" => "string-integer-timestamp",
-      "timestamp" => (string) mktime(0, 0, 0, date('n'), 1, date('Y')),
-    )));
+    public function testAlias(): void
+    {
+        self::assertTrue(
+            Rudder::alias(
+                [
+                    'previousId' => 'previous-id',
+                    'userId'     => 'user-id',
+                ]
+            )
+        );
+    }
 
-    $this->assertTrue(Rudder::track(array(
-      "userId" => "user-id",
-      "event" => "iso8630-timestamp",
-      "timestamp" => date(DATE_ATOM, mktime(0, 0, 0, date('n'), 1, date('Y'))),
-    )));
+    public function testContextEmpty(): void
+    {
+        self::assertTrue(
+            Rudder::track(
+                [
+                    'userId'  => 'user-id',
+                    'event'   => 'Context Test',
+                    'context' => [],
+                ]
+            )
+        );
+    }
 
-    $this->assertTrue(Rudder::track(array(
-      "userId" => "user-id",
-      "event" => "iso8601-timestamp",
-      "timestamp" => date(DATE_ATOM, mktime(0, 0, 0, date('n'), 1, date('Y'))),
-    )));
+    public function testContextCustom(): void
+    {
+        self::assertTrue(
+            Rudder::track(
+                [
+                    'userId'  => 'user-id',
+                    'event'   => 'Context Test',
+                    'context' => ['active' => false],
+                ]
+            )
+        );
+    }
 
-    $this->assertTrue(Rudder::track(array(
-      "userId" => "user-id",
-      "event" => "strtotime-timestamp",
-      "timestamp" => strtotime('1 week ago'),
-    )));
+    public function testTimestamps(): void
+    {
+        self::assertTrue(
+            Rudder::track(
+                [
+                    'userId'    => 'user-id',
+                    'event'     => 'integer-timestamp',
+                    'timestamp' => (int)mktime(0, 0, 0, (int)date('n'), 1, (int)date('Y')),
+                ]
+            )
+        );
 
-    $this->assertTrue(Rudder::track(array(
-      "userId" => "user-id",
-      "event" => "microtime-timestamp",
-      "timestamp" => microtime(true),
-    )));
+        self::assertTrue(
+            Rudder::track(
+                [
+                    'userId'    => 'user-id',
+                    'event'     => 'string-integer-timestamp',
+                    'timestamp' => (string)mktime(0, 0, 0, (int)date('n'), 1, (int)date('Y')),
+                ]
+            )
+        );
 
-    $this->assertTrue(Rudder::track(array(
-      "userId" => "user-id",
-      "event" => "invalid-float-timestamp",
-      "timestamp" => ((string) mktime(0, 0, 0, date('n'), 1, date('Y'))) . '.',
-    )));
-  }
+        self::assertTrue(
+            Rudder::track(
+                [
+                    'userId'    => 'user-id',
+                    'event'     => 'iso8630-timestamp',
+                    'timestamp' => date(DATE_ATOM, mktime(0, 0, 0, (int)date('n'), 1, (int)date('Y'))),
+                ]
+            )
+        );
+
+        self::assertTrue(
+            Rudder::track(
+                [
+                    'userId'    => 'user-id',
+                    'event'     => 'iso8601-timestamp',
+                    'timestamp' => date(DATE_ATOM, mktime(0, 0, 0, (int)date('n'), 1, (int)date('Y'))),
+                ]
+            )
+        );
+
+        self::assertTrue(
+            Rudder::track(
+                [
+                    'userId'    => 'user-id',
+                    'event'     => 'strtotime-timestamp',
+                    'timestamp' => strtotime('1 week ago'),
+                ]
+            )
+        );
+
+        self::assertTrue(
+            Rudder::track(
+                [
+                    'userId'    => 'user-id',
+                    'event'     => 'microtime-timestamp',
+                    'timestamp' => microtime(true),
+                ]
+            )
+        );
+
+        self::assertTrue(
+            Rudder::track(
+                [
+                    'userId'    => 'user-id',
+                    'event'     => 'invalid-float-timestamp',
+                    'timestamp' => ((string)mktime(0, 0, 0, (int)date('n'), 1, (int)date('Y'))) . '.',
+                ]
+            )
+        );
+    }
+
+    public static function tearDownAfterClass(): void
+    {
+        self::$server->stop();
+    }
 }

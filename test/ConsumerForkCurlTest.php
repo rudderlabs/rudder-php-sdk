@@ -1,99 +1,215 @@
 <?php
 
-require_once __DIR__ . "/../lib/Rudder/Client.php";
+declare(strict_types=1);
 
-class ConsumerForkCurlTest extends PHPUnit_Framework_TestCase
+namespace Rudder\Test;
+
+use donatj\MockWebServer\MockWebServer;
+use donatj\MockWebServer\Response;
+use Dotenv\Dotenv;
+use PHPUnit\Framework\TestCase;
+use Rudder\Client;
+
+class ConsumerForkCurlTest extends TestCase
 {
-  private $client;
+    protected static MockWebServer $server;
 
-  public function setUp()
-  {
-    date_default_timezone_set("UTC");
-    $this->client = new Rudder_Client(
-      "OnMMoZ6YVozrgSBeZ9FpkC0ixH0ycYZn",
-      array(
-        "consumer" => "fork_curl",
-        "debug" => true,
-      )
-    );
-  }
+    public static function setUpBeforeClass(): void
+    {
+        // Looking for .env at the root directory
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+        $dotenv->load();
+        date_default_timezone_set('UTC');
 
-  public function testTrack()
-  {
-    $this->assertTrue($this->client->track(array(
-      "userId" => "some-user",
-      "event" => "PHP Fork Curl'd\" Event",
-    )));
-  }
+        self::$server = new MockWebServer();
+        self::$server->start();
+        self::$server->setResponseOfPath('/v1/batch', new Response(
+            'OK',
+            [ 'Cache-Control' => 'no-cache' ],
+            200
+        ));
+    }
 
-  public function testIdentify()
-  {
-    $this->assertTrue($this->client->identify(array(
-      "userId" => "user-id",
-      "traits" => array(
-        "loves_php" => false,
-        "type" => "consumer fork-curl test",
-        "birthday" => time(),
-      ),
-    )));
-  }
+    public function setUp(): void
+    {
+    }
 
-  public function testGroup()
-  {
-    $this->assertTrue($this->client->group(array(
-      "userId" => "user-id",
-      "groupId" => "group-id",
-      "traits" => array(
-        "type" => "consumer fork-curl test",
-      ),
-    )));
-  }
+    public function testTrack(): void
+    {
+        $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
+        $__DATAPLANE_URL__ = self::$server->getServerRoot();
 
-  public function testPage()
-  {
-    $this->assertTrue($this->client->page(array(
-      "userId" => "userId",
-      "name" => "analytics-php",
-      "category" => "fork-curl",
-      "properties" => array(
-        "url" => "https://a.url/",
-      ),
-    )));
-  }
+        $client = new Client(
+            $__WRITE_KEY__,
+            [
+                'compress_request' => false,
+                'ssl' => false,
+                'debug' => true,
+                'data_plane_url' => $__DATAPLANE_URL__,
+                'consumer' => 'fork_curl',
+            ]
+        );
 
-  public function testScreen()
-  {
-    $this->assertTrue($this->client->page(array(
-      "anonymousId" => "anonymous-id",
-      "name" => "grand theft auto",
-      "category" => "fork-curl",
-      "properties" => array(),
-    )));
-  }
+        self::assertTrue($client->track([
+            'userId' => 'some-user',
+            'event'  => "PHP Fork Curl'd\" Event",
+        ]));
+        $client->__destruct();
+    }
 
-  public function testAlias()
-  {
-    $this->assertTrue($this->client->alias(array(
-      "previousId" => "previous-id",
-      "userId" => "user-id",
-    )));
-  }
+    public function testIdentify(): void
+    {
+        $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
+        $__DATAPLANE_URL__ = self::$server->getServerRoot();
 
-  public function testRequestCompression() {
-    $options = array(
-      "compress_request" => true,
-      "consumer" => "fork_curl",
-      "debug" => true,
-    );
+        $client = new Client(
+            $__WRITE_KEY__,
+            [
+                'compress_request' => false,
+                'ssl' => false,
+                'debug' => true,
+                'data_plane_url' => $__DATAPLANE_URL__,
+                'consumer' => 'fork_curl',
+            ]
+        );
 
-    // Create client and send Track message
-    $client = new Rudder_Client("OnMMoZ6YVozrgSBeZ9FpkC0ixH0ycYZn", $options);
-    $result = $client->track(array(
-      "userId" => "some-user",
-      "event" => "PHP Fork Curl'd\" Event with compression",
-    ));
-    $client->__destruct();
+        self::assertTrue($client->identify([
+            'userId' => 'user-id',
+            'traits' => [
+                'loves_php' => false,
+                'type'      => 'consumer fork-curl test',
+                'birthday'  => time(),
+            ],
+        ]));
+        $client->__destruct();
+    }
 
-    $this->assertTrue($result);
-  }
+    public function testGroup(): void
+    {
+        $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
+        $__DATAPLANE_URL__ = self::$server->getServerRoot();
+
+        $client = new Client(
+            $__WRITE_KEY__,
+            [
+                'compress_request' => false,
+                'ssl' => false,
+                'debug' => true,
+                'data_plane_url' => $__DATAPLANE_URL__,
+                'consumer' => 'fork_curl',
+            ]
+        );
+
+        self::assertTrue($client->group([
+            'userId'  => 'user-id',
+            'groupId' => 'group-id',
+            'traits'  => [
+                'type' => 'consumer fork-curl test',
+            ],
+        ]));
+        $client->__destruct();
+    }
+
+    public function testPage(): void
+    {
+        $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
+        $__DATAPLANE_URL__ = self::$server->getServerRoot();
+
+        $client = new Client(
+            $__WRITE_KEY__,
+            [
+                'compress_request' => false,
+                'ssl' => false,
+                'debug' => true,
+                'data_plane_url' => $__DATAPLANE_URL__,
+                'consumer' => 'fork_curl',
+            ]
+        );
+
+        self::assertTrue($client->page([
+            'userId'     => 'userId',
+            'name'       => 'analytics-php',
+            'category'   => 'fork-curl',
+            'properties' => ['url' => 'https://a.url/'],
+        ]));
+        $client->__destruct();
+    }
+
+    public function testScreen(): void
+    {
+        $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
+        $__DATAPLANE_URL__ = self::$server->getServerRoot();
+
+        $client = new Client(
+            $__WRITE_KEY__,
+            [
+                'compress_request' => false,
+                'ssl' => false,
+                'debug' => true,
+                'data_plane_url' => $__DATAPLANE_URL__,
+                'consumer' => 'fork_curl',
+            ]
+        );
+
+        self::assertTrue($client->page([
+            'anonymousId' => 'anonymous-id',
+            'name'        => 'grand theft auto',
+            'category'    => 'fork-curl',
+            'properties'  => [],
+        ]));
+        $client->__destruct();
+    }
+
+    public function testAlias(): void
+    {
+        $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
+        $__DATAPLANE_URL__ = self::$server->getServerRoot();
+
+        $client = new Client(
+            $__WRITE_KEY__,
+            [
+                'compress_request' => false,
+                'ssl' => false,
+                'debug' => true,
+                'data_plane_url' => $__DATAPLANE_URL__,
+                'consumer' => 'fork_curl',
+            ]
+        );
+
+        self::assertTrue($client->alias([
+            'previousId' => 'previous-id',
+            'userId'     => 'user-id',
+        ]));
+        $client->__destruct();
+    }
+
+    public function testRequestCompression(): void
+    {
+        $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
+        $__DATAPLANE_URL__ = self::$server->getServerRoot();
+
+        $client = new Client(
+            $__WRITE_KEY__,
+            [
+                'compress_request' => true,
+                'ssl' => false,
+                'debug' => true,
+                'data_plane_url' => $__DATAPLANE_URL__,
+                'consumer' => 'fork_curl',
+            ]
+        );
+
+        $result = $client->track([
+            'userId' => 'some-user',
+            'event'  => "PHP Fork Curl'd\" Event with compression",
+        ]);
+
+        self::assertTrue($result);
+        $client->__destruct();
+    }
+
+    public static function tearDownAfterClass(): void
+    {
+        self::$server->stop();
+    }
 }
