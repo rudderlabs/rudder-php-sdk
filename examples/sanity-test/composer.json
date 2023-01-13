@@ -1,0 +1,21 @@
+{
+  "name": "rudderstack/rudder-php-sdk-sanity",
+  "version": "1.0.0",
+  "description": "RudderStack Analytics SDK PHP library sanity test app",
+  "homepage": "https://rudderstack.com/",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "RudderStack <sdk@rudderstack.com>",
+      "homepage": "https://rudderstack.com/"
+    }
+  ],
+  "require": {
+    "php": "^7.4 || ^8.0",
+    "vlucas/phpdotenv": "^5.5",
+    "rudderstack/rudder-php-sdk": "*"
+  },
+  "scripts": {
+    "start": "php -f Sanity.php"
+  }
+}
