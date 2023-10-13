@@ -65,6 +65,10 @@ Rudder::track(array(
 ));
 ```
 
+## Acknowledgements
+
+This project is a fork of [analytics-php](https://github.com/segmentio/analytics-php) by [segmentio].
+
 ## Contact Us
 
 If you come across any issues while configuring or using this SDK, feel free to start a conversation on our
