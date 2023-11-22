@@ -6,15 +6,13 @@ Please include a summary of the change along with the relevant motivation and co
 
 Ticket link
 
-## Screenshots
+## Checklist
 
 Please add screenshots for any new features or UI bug fixes for the following browsers -
 
-- Chrome
+- Example passes for all 4 Consumers
   >
-- Firefox
-  >
-- Safari
+- New code covered with unit tests
   >
 
 ## Security
