@@ -11,3 +11,4 @@ junit.xml
 .DS_Store
 .env
 *.iml
+.phplint.cache

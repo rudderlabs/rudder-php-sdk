@@ -34,6 +34,9 @@ release:
 example:
 	@php -f examples/App.php
 
+smoke-test:
+	@php -f examples/sanity-test/Sanity.php
+
 clean:
 	rm -rf \
 		composer.phar \
