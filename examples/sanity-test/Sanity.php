@@ -39,7 +39,7 @@ $dummyTraits = [
     'friends' => 21,
 ];
 
-echo "Starting App.php with:\nconsumer: $__CONSUMER__ \nwrite key: $__WRITE_KEY__ \n\n";
+echo "Starting Sanity.php with:\nconsumer: $__CONSUMER__ \nwrite key: $__WRITE_KEY__ \n\n";
 
 try {
     Rudder::init(
@@ -54,6 +54,8 @@ try {
             'flush_at'              => 7,
         ]
     );
+
+    echo "Start sending events...\n\n";
 
     Rudder::track([
         'anonymousId' => '490729fb-f4d1-4fd0-a00b-823d986609b8',
@@ -107,6 +109,8 @@ try {
         'name' => 'screen viewed',
         'context' => $dummyContext,
     ]);
+
+    echo 'Finished';
 } catch (Exception $e) {
     echo 'Caught exception: ',  $e->getMessage(), "\n";
 }

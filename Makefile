@@ -23,7 +23,7 @@ lint: dependencies
 
 lint-ci: dependencies
 	@mkdir -p build/logs
-	@./vendor/bin/phplint --xml=build/logs/phplint.xml;
+	@./vendor/bin/phplint --log-junit=build/logs/phplint.xml;
 	@./vendor/bin/phpcs --report=checkstyle --report-file=build/logs/phpcs.xml;
 
 release:
@@ -33,6 +33,9 @@ release:
 
 example:
 	@php -f examples/App.php
+
+smoke-test:
+	@php -f examples/sanity-test/Sanity.php
 
 clean:
 	rm -rf \

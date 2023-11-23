@@ -101,10 +101,26 @@ class Socket extends QueueConsumer
 
         // Send user agent in the form of {library_name}/{library_version} as per RFC 7231.
         $content_json = json_decode($content, true);
+        $isSingleEventBatch = count($content_json['batch']) === 1;
         $library = $content_json['batch'][0]['context']['library'];
         $libName = $library['name'];
         $libVersion = $library['version'];
         $req .= "User-Agent: $libName/$libVersion\r\n";
+
+        // Add AnonymousId request header as required from server in order to retain event ordering
+        if ($isSingleEventBatch) {
+            $anonymousIdRequestHeader = '';
+            if (!empty($content_json['batch'][0]['userId'])) {
+                $anonymousIdRequestHeader = $content_json['batch'][0]['userId'];
+            } elseif (!empty($content_json['batch'][0]['anonymousId'])) {
+                $anonymousIdRequestHeader = $content_json['batch'][0]['anonymousId'];
+            }
+
+            if (!empty($anonymousIdRequestHeader)) {
+                $encodedAnonymousId = base64_encode($anonymousIdRequestHeader);
+                $req .= "AnonymousId: $encodedAnonymousId\r\n";
+            }
+        }
 
         // Compress content if compress_request is true
         if ($this->compress_request) {
@@ -125,6 +141,11 @@ class Socket extends QueueConsumer
 
             return false;
         }
+
+//      Uncomment for local debugging
+//        var_dump('===============================================');
+//        var_dump($req);
+//        var_dump('===============================================');
 
         return $req;
     }
