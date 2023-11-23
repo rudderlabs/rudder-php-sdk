@@ -57,6 +57,10 @@ jobs:
         run: |
           make tests
 
+      - name: Validate composer.json
+        run: |
+          composer validate
+
       - name: Upload reports
         uses: actions/upload-artifact@v3
         with:
