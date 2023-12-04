@@ -19,6 +19,7 @@ class LibCurl extends QueueConsumer
     {
         $body = $this->payload($messages);
         $payload = json_encode($body);
+        $isSingleEventBatch = count($messages) === 1;
         $secret = $this->secret;
 
         if ($this->compress_request) {
@@ -53,6 +54,21 @@ class LibCurl extends QueueConsumer
             $libName = $library['name'];
             $libVersion = $library['version'];
             $header[] = "User-Agent: $libName/$libVersion";
+
+            // Add AnonymousId request header as required from server in order to retain event ordering
+            if ($isSingleEventBatch) {
+                $anonymousIdRequestHeader = '';
+                if (!empty($messages[0]['userId'])) {
+                    $anonymousIdRequestHeader = $messages[0]['userId'];
+                } elseif (!empty($messages[0]['anonymousId'])) {
+                    $anonymousIdRequestHeader = $messages[0]['anonymousId'];
+                }
+
+                if (!empty($anonymousIdRequestHeader)) {
+                    $encodedAnonymousId = base64_encode($anonymousIdRequestHeader);
+                    $header[] = "AnonymousId: $encodedAnonymousId";
+                }
+            }
 
             curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
             curl_setopt($ch, CURLOPT_URL, $url);

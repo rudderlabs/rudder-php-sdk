@@ -1,6 +1,6 @@
 {
   "name": "rudderstack/rudder-php-sdk-sanity",
-  "version": "1.0.0",
+  "version": "2.0.1",
   "description": "RudderStack Analytics SDK PHP library sanity test app",
   "homepage": "https://rudderstack.com/",
   "license": "MIT",

@@ -2,11 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.0](https://github.com/rudderlabs/rudder-sdk-js/compare/v2.1.0...v2.0.1) (2023-11-23)
+
+### Features
+
+* enable event ordering for batches with single event on single instance setups or setups with sticky sessions
+
 ## [2.0.1](https://github.com/rudderlabs/rudder-sdk-js/compare/v2.0.1...v2.0.0) (2023-01-13)
 
 ### Bug Fixes
 
-* fix: allow minor version range on ramsey/uuid dependency
+* allow minor version range on ramsey/uuid dependency
 
 ## [2.0.0](https://github.com/rudderlabs/rudder-sdk-js/compare/v2.0.0...v1.0.1) (2023-01-05)
 

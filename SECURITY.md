@@ -10,10 +10,11 @@ We will triage the issue, contact you for further instructions and make sure to 
 
 We will fix any security bugs for the latest major.minor version published in the [Docker Hub](https://hub.docker.com/r/rudderlabs/rudder-server).
 
-| Version | Supported |
-| :-------| :---------|
-| Latest 1.x | ✅ |
-| Older 1.x | ❌ |
-| < 1.0 | ❌ |
+| Version    | Supported |
+|:-----------| :---------|
+| Latest 2.x | ✅ |
+| Latest 1.x | ❌ |
+| Older 1.x  | ❌ |
+| < 1.0      | ❌ |
 
 We may fix the vulnerabilities in the older versions depending on the severity of the issue and the age of the release, but we are only committing to the latest version released.
