@@ -93,8 +93,11 @@ class LibCurl extends QueueConsumer
 //            var_dump("\nResponse code: " . json_encode($responseCode));
 //            var_dump('===============================================');
 
-            //close connection
-            curl_close($ch);
+            // This function has no effect. Prior to PHP 8.0.0, this function was used to close the resource.
+            // @link https://www.php.net/manual/en/function.curl-close.php
+            if (PHP_VERSION_ID < 80000) {
+                curl_close($ch);
+            }
 
             if ($responseCode !== 200) {
                 // log error
