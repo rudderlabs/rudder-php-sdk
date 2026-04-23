@@ -14,7 +14,12 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: actions/stale@v7
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/stale@6f05e4244c9a0b2ed3401882b05d701dd0a7289b # v7.0.0
         with:
           repo-token: ${{ github.token }}
           operations-per-run: 200
@@ -27,10 +32,15 @@ jobs:
     name: Cleanup old branches
     runs-on: ubuntu-latest
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        with:
+          egress-policy: audit
+
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
       - name: Run delete-old-branches-action
-        uses: beatlabs/delete-old-branches-action@v0.0.10
+        uses: beatlabs/delete-old-branches-action@6e94df089372a619c01ae2c2f666bf474f890911 # v0.0.10
         with:
           repo_token: ${{ github.token }}
           date: '2 months ago'
