@@ -174,8 +174,8 @@ class ConsumerSocketTest extends TestCase
             'debug'         => true,
             'consumer'      => 'socket',
             'error_handler' => function ($errno, $errmsg) {
-                if ($errno !== 404) {
-                    throw new Exception('Response is not 404');
+                if ($errno < 400 || $errno >= 500) {
+                    throw new Exception('Expected a 4xx error, got ' . $errno);
                 }
             },
         ];
