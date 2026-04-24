@@ -15,12 +15,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
 
       - name: Setup PHP with tools
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@bf6b4fbd49ca58e4608c9c89fba0b8d90bd2a39f # 2.35.5
         with:
           php-version: '8.2'
           tools: composer, pecl, phpcs
@@ -32,7 +32,7 @@ jobs:
           echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
       - name: Cache dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
@@ -45,13 +45,14 @@ jobs:
         run: |
           make lint-ci
 
-      - name: Create .env file from secrets
-        uses: SpicyPizza/create-envfile@v2.0
-        with:
-          envkey_DATAPLANE_URL: 'hosted.rudderlabs.com'
-          envkey_WRITE_KEY: '123456'
-          envkey_CONSUMER: 'fork_curl'
-          envkey_SSL: false
+      - name: Create .env file
+        run: |
+          cat <<EOF > .env
+          DATAPLANE_URL=hosted.rudderlabs.com
+          WRITE_KEY=123456
+          CONSUMER=fork_curl
+          SSL=false
+          EOF
 
       - name: Execute unit tests
         run: |
@@ -62,14 +63,14 @@ jobs:
           composer validate
 
       - name: Upload reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: Reports
           path: |
             build/logs    
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarcloud-github-action@eb211723266fe8e83102bac7361f0a05c3ac1d1b # v3.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
