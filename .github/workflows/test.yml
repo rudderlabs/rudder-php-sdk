@@ -12,6 +12,8 @@ jobs:
   build:
     name: 'Unit Tests, Coverage & Sonar'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Harden the runner (Audit all outbound calls)
