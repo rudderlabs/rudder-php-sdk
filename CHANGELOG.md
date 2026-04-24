@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.1](https://github.com/rudderlabs/rudder-php-sdk/compare/v2.1.0...v2.1.1) (2026-04-24)
+
+### Bug Fixes
+
+* skip `curl_close()` on PHP 8.0+ where it has no effect ([#125](https://github.com/rudderlabs/rudder-php-sdk/pull/125))
+
 ## [2.1.0](https://github.com/rudderlabs/rudder-php-sdk/compare/v2.1.0...v2.0.1) (2023-11-23)
 
 ### Features
