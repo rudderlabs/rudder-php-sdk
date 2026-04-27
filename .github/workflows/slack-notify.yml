@@ -4,11 +4,19 @@ on:
   release:
     types: [created]
 
+permissions:
+  contents: read
+
 jobs:
   deploy-tag:
     name: Notify Slack
     runs-on: ubuntu-latest
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
+        with:
+          egress-policy: audit
+
       - name: Send message to Slack channel
         id: slack
         uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0 # v1.27.0
