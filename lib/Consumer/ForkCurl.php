@@ -29,7 +29,7 @@ class ForkCurl extends QueueConsumer
 
         $retryMaxTime = $this->retryMaxTimeSeconds();
         $cmd = 'curl --fail'
-            . " --retry $this->max_retries"
+            . " --retry $this->maxRetries"
             . ' --retry-delay 0'
             . " --retry-max-time $retryMaxTime"
             . " -u $secret: -X POST -H 'Content-Type: application/json'";

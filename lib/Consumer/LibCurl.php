@@ -77,7 +77,8 @@ class LibCurl extends QueueConsumer
             curl_setopt(
                 $ch,
                 CURLOPT_HEADERFUNCTION,
-                static function ($_curl, string $headerLine) use (&$responseHeaders): int {
+                static function (...$curlHeaderArgs) use (&$responseHeaders): int {
+                    $headerLine = (string)$curlHeaderArgs[1];
                     $headerLength = strlen($headerLine);
                     $headerParts = explode(':', $headerLine, 2);
                     if (count($headerParts) === 2) {
@@ -98,7 +99,7 @@ class LibCurl extends QueueConsumer
                     curl_close($ch);
                 }
 
-                if ($retries < $this->max_retries) {
+                if ($retries < $this->maxRetries) {
                     $retries++;
                     usleep($this->retryDelayInMicroseconds($retries));
                     continue;
