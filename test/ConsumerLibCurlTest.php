@@ -6,6 +6,7 @@ namespace Rudder\Test;
 
 use donatj\MockWebServer\MockWebServer;
 use donatj\MockWebServer\Response;
+use donatj\MockWebServer\ResponseStack;
 use Dotenv\Dotenv;
 use PHPUnit\Framework\TestCase;
 use Rudder\Client;
@@ -241,6 +242,199 @@ class ConsumerLibCurlTest extends TestCase
         );
 
         $client->__destruct();
+    }
+
+    public function testRateLimitFailureAfterRetryBudgetIsExhausted(): void
+    {
+        self::$server->setResponseOfPath('/v1/batch', new Response(
+            'Rate limited',
+            [ 'Retry-After' => '1' ],
+            429
+        ));
+
+        $__WRITE_KEY__ = $_ENV['WRITE_KEY'];
+        $__DATAPLANE_URL__ = self::$server->getServerRoot();
+
+        $client = new Client(
+            $__WRITE_KEY__,
+            [
+                'compress_request' => false,
+                'ssl' => false,
+                'debug' => true,
+                'data_plane_url' => $__DATAPLANE_URL__,
+                'consumer' => 'lib_curl',
+                'flush_at' => 1,
+                'max_retries' => 0,
+                'retry_jitter_ratio' => 0,
+            ]
+        );
+
+        try {
+            self::assertFalse($client->track(['user_id' => 'some-user', 'event' => 'Rate Limited PHP Event']));
+            $client->__destruct();
+        } finally {
+            self::$server->setResponseOfPath('/v1/batch', new Response(
+                'OK',
+                [ 'Cache-Control' => 'no-cache' ],
+                200
+            ));
+        }
+    }
+
+    public function testRetriesRateLimitUntilSuccess(): void
+    {
+        $requestsBefore = $this->requestCount();
+        self::$server->setResponseOfPath('/v1/batch', new ResponseStack(
+            new Response('Rate limited', [], 429),
+            new Response('OK', [ 'Cache-Control' => 'no-cache' ], 200)
+        ));
+
+        $client = $this->createRetryClient([
+            'max_retries' => 3,
+            'retry_base_delay' => 0,
+            'max_retry_delay' => 0,
+        ]);
+
+        try {
+            self::assertTrue($client->track(['user_id' => 'some-user', 'event' => 'Retried PHP Event']));
+            self::assertSame(2, $this->requestCount() - $requestsBefore);
+        } finally {
+            $client->__destruct();
+            $this->resetBatchResponse();
+        }
+    }
+
+    public function testRetriesServerErrorUntilSuccess(): void
+    {
+        $requestsBefore = $this->requestCount();
+        self::$server->setResponseOfPath('/v1/batch', new ResponseStack(
+            new Response('Service unavailable', [], 503),
+            new Response('OK', [ 'Cache-Control' => 'no-cache' ], 200)
+        ));
+
+        $client = $this->createRetryClient([
+            'max_retries' => 3,
+            'retry_base_delay' => 0,
+            'max_retry_delay' => 0,
+        ]);
+
+        try {
+            self::assertTrue($client->track(['user_id' => 'some-user', 'event' => 'Retried 503 PHP Event']));
+            self::assertSame(2, $this->requestCount() - $requestsBefore);
+        } finally {
+            $client->__destruct();
+            $this->resetBatchResponse();
+        }
+    }
+
+    public function testDoesNotRetryTerminalClientErrors(): void
+    {
+        $requestsBefore = $this->requestCount();
+        self::$server->setResponseOfPath('/v1/batch', new Response('Bad request', [], 400));
+
+        $client = $this->createRetryClient([
+            'max_retries' => 3,
+            'retry_base_delay' => 0,
+            'max_retry_delay' => 0,
+        ]);
+
+        try {
+            self::assertFalse($client->track(['user_id' => 'some-user', 'event' => 'Bad Request PHP Event']));
+            self::assertSame(1, $this->requestCount() - $requestsBefore);
+        } finally {
+            $client->__destruct();
+            $this->resetBatchResponse();
+        }
+    }
+
+    public function testRetriesOnlyWithinRetryBudget(): void
+    {
+        $requestsBefore = $this->requestCount();
+        self::$server->setResponseOfPath('/v1/batch', new ResponseStack(
+            new Response('Rate limited', [], 429),
+            new Response('Rate limited', [], 429),
+            new Response('OK', [ 'Cache-Control' => 'no-cache' ], 200)
+        ));
+
+        $client = $this->createRetryClient([
+            'max_retries' => 1,
+            'retry_base_delay' => 0,
+            'max_retry_delay' => 0,
+        ]);
+
+        try {
+            self::assertFalse($client->track(['user_id' => 'some-user', 'event' => 'Retry Budget PHP Event']));
+            self::assertSame(2, $this->requestCount() - $requestsBefore);
+        } finally {
+            $client->__destruct();
+            $this->resetBatchResponse();
+        }
+    }
+
+    public function testHonorsRetryAfterOnRateLimit(): void
+    {
+        $requestsBefore = $this->requestCount();
+        self::$server->setResponseOfPath('/v1/batch', new ResponseStack(
+            new Response('Rate limited', [ 'Retry-After' => '1' ], 429),
+            new Response('OK', [ 'Cache-Control' => 'no-cache' ], 200)
+        ));
+
+        $client = $this->createRetryClient([
+            'max_retries' => 3,
+            'retry_base_delay' => 0,
+            'max_retry_delay' => 0,
+        ]);
+
+        $start = microtime(true);
+        try {
+            self::assertTrue($client->track(['user_id' => 'some-user', 'event' => 'Retry After PHP Event']));
+            self::assertGreaterThanOrEqual(1.0, microtime(true) - $start);
+            self::assertSame(2, $this->requestCount() - $requestsBefore);
+        } finally {
+            $client->__destruct();
+            $this->resetBatchResponse();
+        }
+    }
+
+    /**
+     * @param array<string,mixed> $overrides
+     */
+    private function createRetryClient(array $overrides = []): Client
+    {
+        return new Client(
+            $_ENV['WRITE_KEY'],
+            array_merge(
+                [
+                    'compress_request' => false,
+                    'ssl' => false,
+                    'debug' => true,
+                    'data_plane_url' => self::$server->getServerRoot(),
+                    'consumer' => 'lib_curl',
+                    'flush_at' => 1,
+                    'retry_jitter_ratio' => 0,
+                ],
+                $overrides
+            )
+        );
+    }
+
+    private function requestCount(): int
+    {
+        $count = 0;
+        while (self::$server->getRequestByOffset($count) !== null) {
+            $count++;
+        }
+
+        return $count;
+    }
+
+    private function resetBatchResponse(): void
+    {
+        self::$server->setResponseOfPath('/v1/batch', new Response(
+            'OK',
+            [ 'Cache-Control' => 'no-cache' ],
+            200
+        ));
     }
 
     public static function tearDownAfterClass(): void

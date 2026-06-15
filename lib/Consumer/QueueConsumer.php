@@ -18,7 +18,11 @@ abstract class QueueConsumer extends Consumer
     protected int $flush_at = 100;
     protected int $max_batch_size_bytes = 512000; //500kb
     protected int $max_item_size_bytes = 32000; // 32kb
+    protected int $max_retries = 3;
+    protected int $retry_base_delay = 100; // Set initial waiting time to 100ms
     protected int $maximum_backoff_duration = 10000; // Set maximum waiting limit to 10s
+    protected float $retry_jitter_ratio = 0.2;
+    protected bool $respect_retry_after = true;
     protected string $host = 'hosted.rudderlabs.com';
     protected bool $compress_request = true;
     protected int $flush_interval_in_mills = 10000; //frequency in milliseconds to send data, default 10
@@ -85,6 +89,30 @@ abstract class QueueConsumer extends Consumer
 
         if (isset($options['curl_connecttimeout'])) {
             $this->curl_connecttimeout = $options['curl_connecttimeout'];
+        }
+
+        if (isset($options['max_retries'])) {
+            $this->max_retries = max(0, (int)$options['max_retries']);
+        }
+
+        if (isset($options['retry_base_delay'])) {
+            $this->retry_base_delay = max(0, (int)$options['retry_base_delay']);
+        }
+
+        if (isset($options['maximum_backoff_duration'])) {
+            $this->maximum_backoff_duration = max(0, (int)$options['maximum_backoff_duration']);
+        }
+
+        if (isset($options['max_retry_delay'])) {
+            $this->maximum_backoff_duration = max(0, (int)$options['max_retry_delay']);
+        }
+
+        if (isset($options['retry_jitter_ratio'])) {
+            $this->retry_jitter_ratio = max(0, min(1, (float)$options['retry_jitter_ratio']));
+        }
+
+        if (isset($options['respect_retry_after'])) {
+            $this->respect_retry_after = (bool)$options['respect_retry_after'];
         }
 
         if (isset($options['ssl']) && $options['ssl'] == false) {
@@ -245,5 +273,68 @@ abstract class QueueConsumer extends Consumer
             'batch'  => $batch,
             'sentAt' => date('c'),
         ];
+    }
+
+    protected function isSuccessStatusCode(int $statusCode): bool
+    {
+        return $statusCode >= 200 && $statusCode < 300;
+    }
+
+    protected function isRetryableStatusCode(int $statusCode): bool
+    {
+        return $statusCode === 0 || $statusCode === 429 || ($statusCode >= 500 && $statusCode <= 599);
+    }
+
+    protected function canRetryStatusCode(int $statusCode, int $retries): bool
+    {
+        return $this->isRetryableStatusCode($statusCode) && $retries < $this->max_retries;
+    }
+
+    /**
+     * @param array<string,string> $headers
+     */
+    protected function retryDelayInMicroseconds(int $retryNumber, array $headers = []): int
+    {
+        $attemptIndex = max(0, $retryNumber - 1);
+        $backoffDelay = min(
+            $this->retry_base_delay * (2 ** $attemptIndex),
+            $this->maximum_backoff_duration
+        );
+        $retryAfterDelay = $this->respect_retry_after ? $this->retryAfterDelayInMilliseconds($headers) : 0;
+        $delay = max($backoffDelay, $retryAfterDelay);
+
+        if ($delay > 0 && $this->retry_jitter_ratio > 0) {
+            $delay += $delay * (mt_rand() / mt_getrandmax()) * $this->retry_jitter_ratio;
+        }
+
+        return (int)round($delay * 1000);
+    }
+
+    /**
+     * @param array<string,string> $headers
+     */
+    protected function retryAfterDelayInMilliseconds(array $headers): int
+    {
+        $normalizedHeaders = array_change_key_case($headers, CASE_LOWER);
+        if (!isset($normalizedHeaders['retry-after'])) {
+            return 0;
+        }
+
+        $value = trim($normalizedHeaders['retry-after']);
+        if (preg_match('/^\d+$/', $value) === 1) {
+            return (int)$value * 1000;
+        }
+
+        $retryAt = strtotime($value);
+        if ($retryAt === false) {
+            return 0;
+        }
+
+        return max(0, $retryAt - time()) * 1000;
+    }
+
+    protected function retryMaxTimeSeconds(): int
+    {
+        return max(1, (int)ceil(($this->maximum_backoff_duration * max(1, $this->max_retries)) / 1000));
     }
 }

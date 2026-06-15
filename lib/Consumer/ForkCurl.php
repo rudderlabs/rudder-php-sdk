@@ -27,7 +27,12 @@ class ForkCurl extends QueueConsumer
         $path = '/v1/batch';
         $url = $this->protocol . $this->host . $path;
 
-        $cmd = "curl -u $secret: -X POST -H 'Content-Type: application/json'";
+        $retryMaxTime = $this->retryMaxTimeSeconds();
+        $cmd = 'curl --fail'
+            . " --retry $this->max_retries"
+            . ' --retry-delay 0'
+            . " --retry-max-time $retryMaxTime"
+            . " -u $secret: -X POST -H 'Content-Type: application/json'";
 
         $tmpfname = '';
         if ($this->compress_request) {
