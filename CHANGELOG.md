@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.2](https://github.com/rudderlabs/rudder-php-sdk/compare/v2.1.1...v2.1.2) (2026-06-24)
+
+
+### Miscellaneous
+
+* **ci:** add release-please workflow ([ba5e436](https://github.com/rudderlabs/rudder-php-sdk/commit/ba5e436c4436d9f9e024031eb7b7d02a708841cd))
+* **ci:** add release-please workflow ([d827510](https://github.com/rudderlabs/rudder-php-sdk/commit/d827510fdb508b586676481b5f42dac07f55dce1))
+* **vuln:** scope workflow permissions to least privilege (SEC-167) ([bdeb2d3](https://github.com/rudderlabs/rudder-php-sdk/commit/bdeb2d3cfc26a90ccc804d187f05438da217f65b))
+
 ## [2.1.1](https://github.com/rudderlabs/rudder-php-sdk/compare/v2.1.0...v2.1.1) (2026-04-24)
 
 ### Bug Fixes
