@@ -55,7 +55,7 @@ class Socket extends QueueConsumer
      *
      * @return false|resource
      */
-    private function createSocket()
+    protected function createSocket()
     {
         if ($this->socket_failed) {
             return false;
