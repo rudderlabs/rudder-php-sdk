@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.3](https://github.com/rudderlabs/rudder-php-sdk/compare/v2.1.2...v2.1.3) (2026-07-02)
+
+
+### Miscellaneous
+
+* apply security best practices from step security ([#132](https://github.com/rudderlabs/rudder-php-sdk/issues/132)) ([b9b3813](https://github.com/rudderlabs/rudder-php-sdk/commit/b9b38139b1209280d96cab3c1bb67749e8e3834e))
+
 ## [2.1.2](https://github.com/rudderlabs/rudder-php-sdk/compare/v2.1.1...v2.1.2) (2026-06-24)
 
 
