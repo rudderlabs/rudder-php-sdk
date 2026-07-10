@@ -298,17 +298,36 @@ class ConsumerLibCurlTest extends TestCase
         try {
             self::assertTrue($client->track(['user_id' => 'some-user', 'event' => 'Retried PHP Event']));
             self::assertSame(2, $this->requestCount() - $requestsBefore);
+
+            $firstRequest = self::$server->getRequestByOffset($requestsBefore);
+            $retryRequest = self::$server->getRequestByOffset($requestsBefore + 1);
+            self::assertNotNull($firstRequest);
+            self::assertNotNull($retryRequest);
+            self::assertSame('POST', $firstRequest->getRequestMethod());
+            self::assertSame('/v1/batch', $firstRequest->getRequestUri());
+            self::assertSame($firstRequest->getRequestMethod(), $retryRequest->getRequestMethod());
+            self::assertSame($firstRequest->getRequestUri(), $retryRequest->getRequestUri());
+            self::assertSame($firstRequest->getInput(), $retryRequest->getInput());
+            self::assertArrayHasKey('Authorization', $firstRequest->getHeaders());
+            self::assertArrayHasKey('Authorization', $retryRequest->getHeaders());
+            self::assertSame(
+                $firstRequest->getHeaders()['Authorization'],
+                $retryRequest->getHeaders()['Authorization']
+            );
         } finally {
             $client->__destruct();
             $this->resetBatchResponse();
         }
     }
 
-    public function testRetriesServerErrorUntilSuccess(): void
+    /**
+     * @dataProvider commonServerErrorProvider
+     */
+    public function testRetriesCommonServerErrorsUntilSuccess(int $statusCode): void
     {
         $requestsBefore = $this->requestCount();
         self::$server->setResponseOfPath('/v1/batch', new ResponseStack(
-            new Response('Service unavailable', [], 503),
+            new Response('Server error', [], $statusCode),
             new Response('OK', [ 'Cache-Control' => 'no-cache' ], 200)
         ));
 
@@ -319,12 +338,28 @@ class ConsumerLibCurlTest extends TestCase
         ]);
 
         try {
-            self::assertTrue($client->track(['user_id' => 'some-user', 'event' => 'Retried 503 PHP Event']));
+            self::assertTrue($client->track([
+                'user_id' => 'some-user',
+                'event' => "Retried $statusCode PHP Event",
+            ]));
             self::assertSame(2, $this->requestCount() - $requestsBefore);
         } finally {
             $client->__destruct();
             $this->resetBatchResponse();
         }
+    }
+
+    /**
+     * @return array<string,array{int}>
+     */
+    public static function commonServerErrorProvider(): array
+    {
+        return [
+            '500 Internal Server Error' => [500],
+            '502 Bad Gateway' => [502],
+            '503 Service Unavailable' => [503],
+            '504 Gateway Timeout' => [504],
+        ];
     }
 
     public function testDoesNotRetryTerminalClientErrors(): void
