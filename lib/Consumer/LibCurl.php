@@ -99,13 +99,14 @@ class LibCurl extends QueueConsumer
                     curl_close($ch);
                 }
 
+                $this->handleError($errorCode, $err);
+
                 if ($retries < $this->maxRetries) {
                     $retries++;
                     usleep($this->retryDelayInMicroseconds($retries));
                     continue;
                 }
 
-                $this->handleError($errorCode, $err);
                 return false;
             }
 

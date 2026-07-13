@@ -281,6 +281,33 @@ class ConsumerLibCurlTest extends TestCase
         }
     }
 
+    public function testReportsEachCurlErrorBeforeRetrying(): void
+    {
+        $reportedErrors = [];
+        $client = new Client(
+            $_ENV['WRITE_KEY'],
+            [
+                'compress_request' => false,
+                'ssl' => false,
+                'data_plane_url' => '127.0.0.1:1',
+                'consumer' => 'lib_curl',
+                'flush_at' => 1,
+                'max_retries' => 1,
+                'retry_base_delay' => 0,
+                'max_retry_delay' => 0,
+                'retry_jitter_ratio' => 0,
+                'curl_connecttimeout' => 1,
+                'error_handler' => static function (int $code, string $message) use (&$reportedErrors): void {
+                    $reportedErrors[] = [$code, $message];
+                },
+            ]
+        );
+
+        self::assertFalse($client->track(['user_id' => 'some-user', 'event' => 'Failed cURL Event']));
+        self::assertCount(2, $reportedErrors);
+        $client->__destruct();
+    }
+
     public function testRetriesRateLimitUntilSuccess(): void
     {
         $requestsBefore = $this->requestCount();
