@@ -209,9 +209,7 @@ class Socket extends QueueConsumer
                 continue;
             }
 
-            if ($statusCode >= 400 && $this->debug()) {
-                $this->handleError((int)$res['status'], $res['message']);
-            }
+            $this->handleError((int)$res['status'], $res['message']);
 
             return false;
         }

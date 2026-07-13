@@ -39,6 +39,22 @@ class ConsumerSocketRetryTest extends TestCase
         self::assertSame(1, $consumer->createdSockets());
     }
 
+    public function testReportsTerminalErrorsWithoutDebug(): void
+    {
+        $reportedErrors = [];
+        $consumer = new RetrySocketConsumer('secret', [
+            'debug' => false,
+            'max_retries' => 0,
+            'error_handler' => static function (int $code, string $message) use (&$reportedErrors): void {
+                $reportedErrors[] = [$code, $message];
+            },
+        ]);
+        $consumer->queueResponse(400, [], 'Bad request');
+
+        self::assertFalse($consumer->flushBatch([self::message()]));
+        self::assertSame([[400, 'Bad Request']], $reportedErrors);
+    }
+
     public function testHonorsRetryAfterOnRateLimit(): void
     {
         $consumer = new RetrySocketConsumer('secret', [
