@@ -20,7 +20,7 @@ abstract class QueueConsumer extends Consumer
     protected int $max_item_size_bytes = 32000; // 32kb
     protected int $maxRetries = 3;
     protected int $retryBaseDelay = 100; // Set initial waiting time to 100ms
-    protected int $maximum_backoff_duration = 10000; // Set maximum waiting limit to 10s
+    protected int $maximum_backoff_duration = 30000; // Set maximum waiting limit to 30s
     protected float $retryJitterRatio = 0.2;
     protected bool $respectRetryAfter = true;
     protected string $host = 'hosted.rudderlabs.com';

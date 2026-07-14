@@ -45,6 +45,15 @@ class ConsumerRetryTest extends TestCase
         self::assertSame(400_000, $consumer->retryDelay(3));
     }
 
+    public function testDefaultMaximumRetryDelayMatchesOtherSdks(): void
+    {
+        $consumer = new RetryTestConsumer('secret', [
+            'retry_jitter_ratio' => 0,
+        ]);
+
+        self::assertSame(30_000_000, $consumer->retryDelay(20));
+    }
+
     public function testRetryAfterDoesNotShortenBackoff(): void
     {
         $consumer = new RetryTestConsumer('secret', [
