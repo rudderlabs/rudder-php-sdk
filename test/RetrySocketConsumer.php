@@ -72,6 +72,21 @@ class RetrySocketConsumer extends Socket
         return $this->createdSockets;
     }
 
+    public function requestForSocket(int $offset): string
+    {
+        $socket = $this->serverSockets[$offset] ?? null;
+        if (!is_resource($socket)) {
+            throw new RuntimeException("No server socket exists at offset $offset.");
+        }
+
+        $request = stream_get_contents($socket);
+        if ($request === false) {
+            throw new RuntimeException("Unable to read request from socket at offset $offset.");
+        }
+
+        return $request;
+    }
+
     public function closeQueuedSockets(): void
     {
         foreach (array_merge($this->clientSockets, $this->serverSockets) as $socket) {

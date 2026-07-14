@@ -55,6 +55,25 @@ class ConsumerSocketRetryTest extends TestCase
         self::assertSame([[400, 'Bad Request']], $reportedErrors);
     }
 
+    public function testCompressesRequestBody(): void
+    {
+        $consumer = new RetrySocketConsumer('secret', [
+            'compress_request' => true,
+        ]);
+        $consumer->queueResponse(200, [], 'OK');
+
+        self::assertTrue($consumer->flushBatch([self::message()]));
+
+        $requestParts = explode("\r\n\r\n", $consumer->requestForSocket(0), 2);
+        self::assertCount(2, $requestParts);
+        self::assertStringContainsString("Content-Encoding: gzip\r\n", $requestParts[0]);
+
+        $body = gzdecode($requestParts[1]);
+        self::assertNotFalse($body);
+        $payload = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+        self::assertSame('socket-retry-message-id', $payload['batch'][0]['messageId']);
+    }
+
     public function testHonorsRetryAfterOnRateLimit(): void
     {
         $consumer = new RetrySocketConsumer('secret', [
