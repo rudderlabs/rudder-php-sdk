@@ -1,14 +1,9 @@
 <?xml version="1.0"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.5/phpunit.xsd"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
          backupGlobals="true"
-         backupStaticAttributes="false"
          bootstrap="vendor/autoload.php"
          colors="true"
-         convertErrorsToExceptions="true"
-         convertNoticesToExceptions="true"
-         convertWarningsToExceptions="true"
-         forceCoversAnnotation="false"
          processIsolation="false"
          stopOnError="false"
          stopOnFailure="false"
@@ -18,11 +13,10 @@
          timeoutForSmallTests="1"
          timeoutForMediumTests="10"
          timeoutForLargeTests="60"
-         verbose="false">
-    <coverage processUncoveredFiles="true">
-        <include>
-            <directory suffix=".php">./lib</directory>
-        </include>
+         cacheDirectory=".phpunit.cache"
+         backupStaticProperties="false"
+         requireCoverageMetadata="false">
+    <coverage>
         <report>
             <clover outputFile="build/logs/clover.xml"/>
         </report>
@@ -34,7 +28,11 @@
     </testsuites>
     <logging>
         <testdoxText outputFile="php://stdout"/>
-        <testdoxXml outputFile="build/logs/clover.xml"/>
         <junit outputFile="build/logs/junit.xml"/>
     </logging>
+    <source>
+        <include>
+            <directory suffix=".php">./lib</directory>
+        </include>
+    </source>
 </phpunit>

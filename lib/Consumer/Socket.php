@@ -55,7 +55,7 @@ class Socket extends QueueConsumer
      *
      * @return false|resource
      */
-    private function createSocket()
+    protected function createSocket()
     {
         if ($this->socket_failed) {
             return false;
@@ -160,15 +160,18 @@ class Socket extends QueueConsumer
      */
     private function makeRequest($socket, string $req): bool
     {
-        $bytes_written = 0;
         $bytes_total = strlen($req);
-        $closed = false;
-        $success = true;
-
-        // Retries with exponential backoff until success
-        $backoff = 100; // Set initial waiting time to 100ms
+        $retries = 0;
 
         while (true) {
+            $bytes_written = 0;
+            $closed = false;
+            $res = [
+                'status'  => 0,
+                'message' => '',
+                'headers' => [],
+            ];
+
             // Send request to server
             while (!$closed && $bytes_written < $bytes_total) {
                 $written = @fwrite($socket, substr($req, $bytes_written));
@@ -184,39 +187,32 @@ class Socket extends QueueConsumer
             $statusCode = 0;
 
             if (!$closed) {
-                $res = self::parseResponse(fread($socket, 2048));
+                $response = fread($socket, 2048);
+                $res = self::parseResponse(is_string($response) ? $response : '');
                 $statusCode = (int)$res['status'];
             }
             fclose($socket);
 
-            // If status code is 200, return true
-            if ($statusCode === 200) {
+            // If status code is successful, return true
+            if ($this->isSuccessStatusCode($statusCode)) {
                 return true;
             }
 
-            // If status code is greater than 500 and less than 600, it indicates server error
-            // Error code 429 indicates rate limited.
-            // Retry uploading in these cases.
-            if (($statusCode >= 500 && $statusCode <= 600) || $statusCode === 429 || $statusCode === 0) {
-                if ($backoff >= $this->maximum_backoff_duration) {
-                    break;
+            if ($this->canRetryStatusCode($statusCode, $retries)) {
+                $retries++;
+                usleep($this->retryDelayInMicroseconds($retries, $res['headers']));
+                $socket = $this->createSocket();
+                if (!$socket) {
+                    return false;
                 }
 
-                usleep($backoff * 1000);
-            } elseif ($statusCode >= 400) {
-                if ($this->debug()) {
-                    $this->handleError(intval($res['status']), $res['message']);
-                }
-
-                break;
+                continue;
             }
 
-            // Retry uploading...
-            $backoff *= 2;
-            $socket = $this->createSocket();
-        }
+            $this->handleError((int)$res['status'], $res['message']);
 
-        return $success;
+            return false;
+        }
     }
 
     /**
@@ -228,15 +224,28 @@ class Socket extends QueueConsumer
      */
     private static function parseResponse(string $res): array
     {
-        [$first,] = explode("\n", $res, 2);
+        $responseParts = explode("\r\n\r\n", $res, 2);
+        $headerBlock = $responseParts[0] ?? '';
+        $headerLines = preg_split('/\r\n|\n|\r/', $headerBlock) ?: [];
+        $first = array_shift($headerLines) ?? '';
 
         // Response comes back as HTTP/1.1 200 OK
         // Final line contains HTTP response.
-        [, $status, $message] = explode(' ', $first, 3);
+        $statusParts = explode(' ', $first, 3);
+        $status = $statusParts[1] ?? 0;
+        $message = $statusParts[2] ?? '';
+        $headers = [];
+        foreach ($headerLines as $headerLine) {
+            $headerParts = explode(':', $headerLine, 2);
+            if (count($headerParts) === 2) {
+                $headers[strtolower(trim($headerParts[0]))] = trim($headerParts[1]);
+            }
+        }
 
         return [
             'status'  => $status ?? null,
             'message' => $message,
+            'headers' => $headers,
         ];
     }
 }

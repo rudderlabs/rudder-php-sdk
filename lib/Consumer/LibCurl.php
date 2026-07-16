@@ -11,7 +11,7 @@ class LibCurl extends QueueConsumer
     /**
      * Make a sync request to our API. If debug is
      * enabled, we wait for the response
-     * and retry once to diminish impact on performance.
+     * and retry transient responses with exponential backoff.
      * @param array $messages array of all the messages to send
      * @return bool whether the request succeeded
      */
@@ -29,11 +29,12 @@ class LibCurl extends QueueConsumer
         $path = '/v1/batch';
         $url = $this->protocol . $this->host . $path;
 
-        $backoff = 100; // Set initial waiting time to 100ms
+        $retries = 0;
 
-        while ($backoff < $this->maximum_backoff_duration) {
+        while (true) {
             // open connection
             $ch = curl_init();
+            $responseHeaders = [];
 
             // set the url, number of POST vars, POST data
             curl_setopt($ch, CURLOPT_USERPWD, $secret . ':');
@@ -73,13 +74,39 @@ class LibCurl extends QueueConsumer
             curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt(
+                $ch,
+                CURLOPT_HEADERFUNCTION,
+                static function (...$curlHeaderArgs) use (&$responseHeaders): int {
+                    $headerLine = (string)$curlHeaderArgs[1];
+                    $headerLength = strlen($headerLine);
+                    $headerParts = explode(':', $headerLine, 2);
+                    if (count($headerParts) === 2) {
+                        $responseHeaders[strtolower(trim($headerParts[0]))] = trim($headerParts[1]);
+                    }
+
+                    return $headerLength;
+                }
+            );
 
             // retry failed requests just once to diminish impact on performance
             $responseContent = curl_exec($ch);
 
             $err = curl_error($ch);
             if ($err) {
-                $this->handleError(curl_errno($ch), $err);
+                $errorCode = curl_errno($ch);
+                if (PHP_VERSION_ID < 80000) {
+                    curl_close($ch);
+                }
+
+                $this->handleError($errorCode, $err);
+
+                if ($retries < $this->maxRetries) {
+                    $retries++;
+                    usleep($this->retryDelayInMicroseconds($retries));
+                    continue;
+                }
+
                 return false;
             }
 
@@ -100,24 +127,19 @@ class LibCurl extends QueueConsumer
                 curl_close($ch);
             }
 
-            if ($responseCode !== 200) {
-                // log error
-                $this->handleError($responseCode, $responseContent);
-
-                if (($responseCode >= 500 && $responseCode <= 600) || $responseCode === 429) {
-                    // If status code is greater than 500 and less than 600, it indicates server error
-                    // Error code 429 indicates rate limited.
-                    // Retry uploading in these cases.
-                    usleep($backoff * 1000);
-                    $backoff *= 2;
-                } elseif ($responseCode >= 400) {
-                    break;
-                }
-            } else {
-                break; // no error
+            if ($this->isSuccessStatusCode($responseCode)) {
+                return true;
             }
-        }
 
-        return true;
+            if ($this->canRetryStatusCode($responseCode, $retries)) {
+                $retries++;
+                usleep($this->retryDelayInMicroseconds($retries, $responseHeaders));
+                continue;
+            }
+
+            // log error
+            $this->handleError($responseCode, (string)$responseContent);
+            return false;
+        }
     }
 }
