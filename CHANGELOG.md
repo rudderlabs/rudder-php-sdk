@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.2.0](https://github.com/rudderlabs/rudder-php-sdk/compare/v2.1.2...v2.2.0) (2026-07-16)
+
+
+### Features
+
+* implement retry handling in PHP SDK ([5043a75](https://github.com/rudderlabs/rudder-php-sdk/commit/5043a759c83acaad74cca7c0a55c9c5bbbaa0023))
+
+
+### Bug Fixes
+
+* sdk-4947 align maximum retry delay ([497d615](https://github.com/rudderlabs/rudder-php-sdk/commit/497d61512b2a0ec9cda9644fb27ca2a3fc56f611))
+* sdk-4947 report curl errors before retry delay ([5d06481](https://github.com/rudderlabs/rudder-php-sdk/commit/5d06481409f32d1c3b92eed7e723f6826f421d38))
+* sdk-4947 report terminal socket errors consistently ([66adc06](https://github.com/rudderlabs/rudder-php-sdk/commit/66adc063e62d7386acacd3fbab939c81fac76b41))
+
+
+### Miscellaneous
+
+* apply security best practices from step security ([#132](https://github.com/rudderlabs/rudder-php-sdk/issues/132)) ([b9b3813](https://github.com/rudderlabs/rudder-php-sdk/commit/b9b38139b1209280d96cab3c1bb67749e8e3834e))
+* sdk-4947 align socket tests with retry behavior ([c5f3e30](https://github.com/rudderlabs/rudder-php-sdk/commit/c5f3e30d63d94eff5387fed8e2a93cc9ac4ac18c))
+* sdk-4947 cover socket retry handling ([6e92a5d](https://github.com/rudderlabs/rudder-php-sdk/commit/6e92a5d70ee8e57d3cf9de9cbd2ef424dfe173f7))
+* sdk-4947 harden retry integration coverage ([9064658](https://github.com/rudderlabs/rudder-php-sdk/commit/90646585e7e41c6bf034111ad2c474ff0cfd92b7))
+
+
+### Documentation
+
+* sdk-4947 remove retry-after option from readme ([e6cf72a](https://github.com/rudderlabs/rudder-php-sdk/commit/e6cf72a0e77d2fc147d6066c39cdd7f05dacbc35))
+
 ## [2.1.2](https://github.com/rudderlabs/rudder-php-sdk/compare/v2.1.1...v2.1.2) (2026-06-24)
 
 
