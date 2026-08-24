@@ -42,6 +42,7 @@ class ForkCurl extends QueueConsumer
             exec($cmd2, $output, $exit);
 
             if ($exit !== 0) {
+                $output = implode(PHP_EOL, $output);
                 $this->handleError($exit, $output);
                 return false;
             }
@@ -53,7 +54,7 @@ class ForkCurl extends QueueConsumer
             $cmd .= ' -d ' . $payload;
         }
 
-        $cmd .= " '" . $url . "'";
+        $cmd .= ' ' . escapeshellarg($url);
 
         // Verify payload size is below 512KB
         if (strlen($payload) >= 500 * 1024) {
@@ -67,7 +68,7 @@ class ForkCurl extends QueueConsumer
         $library = $messages[0]['context']['library'];
         $libName = $library['name'];
         $libVersion = $library['version'];
-        $cmd .= " -H 'User-Agent: $libName/$libVersion'";
+        $cmd .= ' -H ' . escapeshellarg("User-Agent: $libName/$libVersion");
 
         // Add AnonymousId request header as required from server in order to retain event ordering
         if ($isSingleEventBatch) {
@@ -99,6 +100,7 @@ class ForkCurl extends QueueConsumer
 //            var_dump('===============================================');
 
         if ($exit !== 0) {
+            $output = implode(PHP_EOL, $output);
             $this->handleError($exit, $output);
         }
 

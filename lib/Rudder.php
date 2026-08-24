@@ -6,7 +6,7 @@ namespace Rudder;
 
 class Rudder
 {
-    private static Client $client;
+    private static ?Client $client = null;
 
     /**
      * Initializes the default client to use. Uses the libcurl consumer by default.
