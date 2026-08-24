@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.2.1](https://github.com/rudderlabs/rudder-php-sdk/compare/v2.2.0...v2.2.1) (2026-08-24)
+
+
+### Bug Fixes
+
+* sdk-5296 harden forkcurl and client initialization ([d1a7128](https://github.com/rudderlabs/rudder-php-sdk/commit/d1a71280705d8c371496296db6f4a13be1424bc9))
+* sdk-5296 harden forkcurl and client initialization ([9a1659a](https://github.com/rudderlabs/rudder-php-sdk/commit/9a1659ad5ccf782766b87f3bddc06104d7cf7a65))
+
 ## [2.2.0](https://github.com/rudderlabs/rudder-php-sdk/compare/v2.1.2...v2.2.0) (2026-07-16)
 
 
