@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.2.2](https://github.com/rudderlabs/rudder-php-sdk/compare/v2.2.1...v2.2.2) (2026-09-04)
+
+
+### Miscellaneous
+
+* sdk-5436 update codeowners ([#147](https://github.com/rudderlabs/rudder-php-sdk/issues/147)) ([b0e4d32](https://github.com/rudderlabs/rudder-php-sdk/commit/b0e4d32df6620a6fefc47caee52cd5c93bf4579b))
+
 ## [2.2.1](https://github.com/rudderlabs/rudder-php-sdk/compare/v2.2.0...v2.2.1) (2026-08-24)
 
 
