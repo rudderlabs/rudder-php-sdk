@@ -66,7 +66,7 @@ class LibCurl extends QueueConsumer
                 }
 
                 if (!empty($anonymousIdRequestHeader)) {
-                    $encodedAnonymousId = base64_encode($anonymousIdRequestHeader);
+                    $encodedAnonymousId = base64_encode((string) $anonymousIdRequestHeader);
                     $header[] = "AnonymousId: $encodedAnonymousId";
                 }
             }
