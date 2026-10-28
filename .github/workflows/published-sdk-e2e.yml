@@ -1,0 +1,96 @@
+name: Published PHP SDK E2E
+
+on:
+  release:
+    types: [published]
+  # Retry validation at an existing release tag. This workflow cannot publish.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Do not cancel live validation; the central workflow owns locking and cleanup.
+jobs:
+  validate:
+    if: github.event_name != 'release' || !github.event.release.prerelease
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411
+        with:
+          egress-policy: audit
+      - name: Require an exact release tag
+        env:
+          PACKAGE_VERSION: ${{ github.event.release.tag_name || github.ref_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || github.ref_name }}
+        shell: bash
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" != release && "$GITHUB_EVENT_NAME" != workflow_dispatch ]]; then
+            echo 'Published validation only accepts release events or manual retries.' >&2
+            exit 1
+          fi
+          if [[ "$GITHUB_REF_TYPE" != tag ]] ||
+             [[ ! "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] ||
+             [[ "${PACKAGE_VERSION#v}" != "${RELEASE_TAG#v}" ]]; then
+            echo 'Select the existing stable release tag that matches the exact package version.' >&2
+            exit 1
+          fi
+      - name: Create a central validation token
+        id: token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_PRIVATE_KEY }}
+          owner: rudderlabs
+          repositories: rudder-sdk-e2e-tests
+          permission-actions: write
+      - name: Validate the exact public package, delivery, and cleanup
+        # SDK-5962. Merge only after the shared action and central published mode are reviewed.
+        uses: rudderlabs/github-action-sdk-e2e@855d3e174e917aab71b93a862c7e74592904d10e
+        with:
+          token: ${{ steps.token.outputs.token }}
+          package-version: ${{ github.event.release.tag_name || github.ref_name }}
+          suite: full
+
+  notify-release:
+    name: Notify accepted release
+    needs: validate
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
+        with:
+          egress-policy: audit
+
+      - name: Send message to Slack channel
+        id: slack
+        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0 # v1.27.0
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          PROJECT_NAME: 'PHP SDK'
+        with:
+          channel-id: "${{ secrets.SLACK_RELEASE_CHANNEL_ID }}"
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "New release: ${{ env.PROJECT_NAME }}"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Release: <${{ github.event.release.html_url }}|${{ github.event.release.tag_name }}>*"
+                  }
+                }
+              ]
+            }
