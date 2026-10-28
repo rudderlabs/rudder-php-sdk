@@ -15,6 +15,7 @@ jobs:
   build:
     name: 'Unit Tests, Coverage & Sonar'
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
       contents: read
 
@@ -28,6 +29,13 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check release workflow contract
+        run: |
+          python3 -m venv "$RUNNER_TEMP/release-workflow-tests"
+          "$RUNNER_TEMP/release-workflow-tests/bin/pip" install 'PyYAML==6.0.3'
+          "$RUNNER_TEMP/release-workflow-tests/bin/python" -m unittest discover -s tests -p 'test_*.py' -q
 
       - name: Setup PHP with tools
         uses: shivammathur/setup-php@bf6b4fbd49ca58e4608c9c89fba0b8d90bd2a39f # 2.35.5
