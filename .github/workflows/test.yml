@@ -12,6 +12,27 @@ permissions:
   contents: read
 
 jobs:
+  workflow-contract:
+    name: Published release workflow contract
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read # Checkout the PR for offline contract checks.
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Run offline release workflow tests
+        run: |
+          python3 -m pip install 'PyYAML==6.0.3'
+          python3 -m unittest discover -s tests -p test_published_release.py
+
   build:
     name: 'Unit Tests, Coverage & Sonar'
     runs-on: ubuntu-latest

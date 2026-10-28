@@ -1,0 +1,140 @@
+# RESOLVE: SDK-5961/SDK-5962 must land, then pin the reviewed package-version-capable shared action SHA; do not merge this draft with the incompatible action below.
+name: Published PHP SDK acceptance
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing published release tag (vX.Y.Z); validation only
+        required: true
+        type: string
+      origin_sha:
+        description: Full 40-character commit SHA peeled from that release tag
+        required: true
+        type: string
+
+permissions: {}
+
+# Each request gets its own group: a pending retry must not replace another run.
+# The central workflow serializes live acceptance and cleanup.
+concurrency:
+  group: published-php-acceptance-${{ github.run_id }}-${{ github.run_attempt }}
+  cancel-in-progress: false
+
+jobs:
+  metadata:
+    if: >-
+      github.repository == 'rudderlabs/rudder-php-sdk' &&
+      ((github.event_name == 'release' && !github.event.release.draft && !github.event.release.prerelease) ||
+       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read # Query the published release and peel its tag.
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+      version: ${{ steps.release.outputs.version }}
+      origin: ${{ steps.release.outputs.origin }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+      - name: Checkout trusted verifier from master
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: master
+          persist-credentials: false
+      - name: Verify exact release and tag commit
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+          ORIGIN_SHA: ${{ inputs.origin_sha }}
+        run: python3 scripts/verify_release_metadata.py
+
+  validate:
+    needs: metadata
+    if: needs.metadata.result == 'success'
+    runs-on: ubuntu-latest
+    # The shared action waits up to 3000s; leave ample time for its result and cleanup.
+    timeout-minutes: 70
+    permissions: {}
+    outputs:
+      run_url: ${{ steps.e2e.outputs.run-url }}
+      accepted: ${{ steps.e2e.outcome == 'success' }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+      - name: Mint central Actions-only App token
+        id: token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_PRIVATE_KEY }}
+          owner: rudderlabs
+          repositories: rudder-sdk-e2e-tests
+          permission-actions: write
+      - name: Validate exact Packagist artifact and full delivery/cleanup
+        id: e2e
+        # Keep the dispatch URL available to notify even when central acceptance fails.
+        continue-on-error: true
+        # Current main (8fcd966) lacks package-version and published selection;
+        # draft only: replace with reviewed SDK-5962 SHA after verifying central provenance.
+        uses: rudderlabs/github-action-sdk-e2e@8fcd9661885616652b992c1fea8df5c2a163f6e2
+        env:
+          # The shared dispatcher derives the commit from GITHUB_SHA. Override only for this step,
+          # since release event SHA and a historical retry must match the peeled release tag.
+          GITHUB_SHA: ${{ needs.metadata.outputs.origin }}
+        with:
+          token: ${{ steps.token.outputs.token }}
+          suite: full
+          package-version: ${{ needs.metadata.outputs.version }}
+
+  notify:
+    needs: [metadata, validate]
+    if: always() && github.repository == 'rudderlabs/rudder-php-sdk' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions: {}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+      - name: Serialize acceptance result
+        id: message
+        env:
+          TAG: ${{ needs.metadata.outputs.tag || github.event.release.tag_name || inputs.tag }}
+          VERSION: ${{ needs.metadata.outputs.version || 'unverified' }}
+          ORIGIN: ${{ needs.metadata.outputs.origin || 'unverified' }}
+          CENTRAL_RUN: ${{ needs.validate.outputs.run_url || 'unavailable (dispatch or metadata failed)' }}
+          ACCEPTED: ${{ needs.metadata.result == 'success' && needs.validate.result == 'success' && needs.validate.outputs.accepted == 'true' }}
+          CALLER: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          status = ('Release complete — exact Packagist artifact and full E2E delivery/cleanup accepted'
+                    if os.environ['ACCEPTED'] == 'true' else
+                    'Published but acceptance failed (or could not be verified); no automatic unpublish')
+          text = (f"{status} — PHP SDK {os.environ['TAG']} (version {os.environ['VERSION']}, "
+                  f"commit {os.environ['ORIGIN']}). Central run: {os.environ['CENTRAL_RUN']}. "
+                  f"Caller: {os.environ['CALLER']}")
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
+              output.write('payload=' + json.dumps({'text': text}) + '\n')
+          PY
+      - name: Send acceptance result to Slack
+        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0 # v1.27.0
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        with:
+          channel-id: ${{ secrets.SLACK_RELEASE_CHANNEL_ID }}
+          payload: ${{ steps.message.outputs.payload }}
+      - name: Fail caller when acceptance failed
+        if: needs.metadata.result != 'success' || needs.validate.result != 'success' || needs.validate.outputs.accepted != 'true'
+        run: exit 1

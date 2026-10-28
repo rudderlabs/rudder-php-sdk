@@ -3,21 +3,38 @@ updates:
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
-      interval: 'monthly'
-    open-pull-requests-limit: 0
+      interval: 'weekly'
     cooldown:
       default-days: 7
+      exclude:
+        - 'rudderlabs/*'
+    groups:
+      actions-security:
+        applies-to: security-updates
+        patterns: ['*']
+      actions:
+        patterns: ['*']
   - package-ecosystem: 'composer'
     directory: '/'
     schedule:
-      interval: 'monthly'
-    open-pull-requests-limit: 0
+      interval: 'weekly'
     cooldown:
       default-days: 7
+    groups:
+      composer-security:
+        applies-to: security-updates
+        patterns: ['*']
+      composer-deps:
+        patterns: ['*']
   - package-ecosystem: 'composer'
     directory: '/examples/sanity-test'
     schedule:
-      interval: 'monthly'
-    open-pull-requests-limit: 0
+      interval: 'weekly'
     cooldown:
       default-days: 7
+    groups:
+      composer-security:
+        applies-to: security-updates
+        patterns: ['*']
+      composer-deps:
+        patterns: ['*']
