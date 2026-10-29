@@ -11,7 +11,7 @@ permissions:
 
 # Do not cancel live validation; the central workflow owns locking and cleanup.
 jobs:
-  validate:
+  release-ref:
     if: github.event_name != 'release' || !github.event.release.prerelease
     runs-on: ubuntu-latest
     timeout-minutes: 55
@@ -36,22 +36,17 @@ jobs:
             echo 'Select the existing stable release tag that matches the exact package version.' >&2
             exit 1
           fi
-      - name: Create a central validation token
-        id: token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
-          private-key: ${{ secrets.RELEASE_PRIVATE_KEY }}
-          owner: rudderlabs
-          repositories: rudder-sdk-e2e-tests
-          permission-actions: write
-      - name: Validate the exact public package, delivery, and cleanup
-        # SDK-5962. Merge only after the shared action and central published mode are reviewed.
-        uses: rudderlabs/github-action-sdk-e2e@855d3e174e917aab71b93a862c7e74592904d10e
-        with:
-          token: ${{ steps.token.outputs.token }}
-          package-version: ${{ github.event.release.tag_name || github.ref_name }}
-          suite: full
+
+  validate:
+    needs: release-ref
+    if: github.event_name != 'release' || !github.event.release.prerelease
+    # SDK-5977. Review and merge shared-action PR #8 before this caller.
+    uses: rudderlabs/github-action-sdk-e2e/.github/workflows/published-sdk-e2e.yml@1f92c84d6836a235604457ca29c02fd1a0d7c874
+    with:
+      package-version: ${{ github.event.release.tag_name || github.ref_name }}
+      release-app-client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+    secrets:
+      RELEASE_PRIVATE_KEY: ${{ secrets.RELEASE_PRIVATE_KEY }}
 
   notify-release:
     name: Notify release acceptance
@@ -72,7 +67,7 @@ jobs:
           RELEASE_VERSION: ${{ github.event.release.tag_name }}
           RELEASE_PUBLISHED_AT: ${{ github.event.release.published_at }}
         run: |
-          release_date=$(date -u -d "$RELEASE_PUBLISHED_AT" +%F 2>/dev/null || date -u +%F)
+          release_date=$(python3 -c 'import datetime, os; print(datetime.datetime.fromisoformat(os.environ["RELEASE_PUBLISHED_AT"].replace("Z", "+00:00")).date())')
           if [[ ! "$RELEASE_VERSION" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
             RELEASE_VERSION='unverified release tag'
           fi

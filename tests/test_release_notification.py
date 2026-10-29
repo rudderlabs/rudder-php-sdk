@@ -20,28 +20,21 @@ class ReleaseNotificationTests(unittest.TestCase):
     def test_release_and_retry_are_separate(self):
         self.assertEqual(self.workflow["on"]["release"]["types"], ["published"])
         self.assertIn("workflow_dispatch", self.workflow["on"])
-        self.assertEqual(self.validate["runs-on"], "ubuntu-latest")
-        self.assertIn("GITHUB_REF_TYPE", self.validate["steps"][1]["run"])
-        self.assertIn("suite", self.validate["steps"][3]["with"])
-        self.assertEqual(self.validate["steps"][3]["with"]["suite"], "full")
-        self.assertEqual(
-            self.validate["steps"][3]["with"]["package-version"],
-            "${{ github.event.release.tag_name || github.ref_name }}",
-        )
+        self.assertEqual(self.workflow["jobs"]["release-ref"]["runs-on"], "ubuntu-latest")
+        self.assertIn("GITHUB_REF_TYPE", self.workflow["jobs"]["release-ref"]["steps"][1]["run"])
+        self.assertRegex(self.validate["uses"], r"^rudderlabs/github-action-sdk-e2e/\.github/workflows/published-sdk-e2e\.yml@[0-9a-f]{40}$")
+        self.assertEqual(self.validate["needs"], "release-ref")
+        self.assertEqual(self.validate["with"]["package-version"], "${{ github.event.release.tag_name || github.ref_name }}")
         self.assertEqual(self.notify["needs"], "validate")
         self.assertIn("always()", self.notify["if"])
         self.assertIn("github.event_name == 'release'", self.notify["if"])
         self.assertIn("!github.event.release.prerelease", self.notify["if"])
 
     def test_scoped_token_and_no_publication_path(self):
-        token = self.validate["steps"][2]["with"]
-        self.assertEqual(token["repositories"], "rudder-sdk-e2e-tests")
-        self.assertEqual(token["permission-actions"], "write")
-        self.assertNotIn("permission-contents", token)
-        self.assertEqual(token["private-key"], "${{ secrets.RELEASE_PRIVATE_KEY }}")
+        self.assertEqual(self.validate["secrets"], {"RELEASE_PRIVATE_KEY": "${{ secrets.RELEASE_PRIVATE_KEY }}"})
+        self.assertNotIn("steps", self.validate)
         self.assertNotIn("cancel-in-progress: true", WORKFLOW.read_text())
-        step_names = " ".join(step["name"] for step in self.validate["steps"])
-        self.assertNotRegex(step_names, r"(?i)upload|publish|create tag|release.please")
+        self.assertNotIn("id-token: write", WORKFLOW.read_text())
 
     def test_slack_root_and_nonbroadcast_thread_use_existing_pin(self):
         steps = self.notify["steps"]
