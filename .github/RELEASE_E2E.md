@@ -2,6 +2,8 @@
 
 The published-package workflow requests the full central E2E suite for the exact stable release version. It uses the existing release App and waits for delivery validation and cleanup. The central workflow checks the release tag against the event commit and master ancestry, installs the exact public registry package, and verifies its Composer-resolved version and source reference.
 
+Only stable releases use this acceptance and notification path. Prereleases have no supported published-validation path and do not produce completion announcements. The PHP repository had no required Slack mentions; the notification preserves that behavior.
+
 The release tag makes the package available to the registry. Acceptance starts on the published GitHub release event. This is post-tag acceptance, not a pre-publication gate.
 
 Full source-candidate E2E before publication is tracked separately in [SDK-5973](https://linear.app/rudderstack/issue/SDK-5973). Do not treat native tests or this post-publication check as that gate.

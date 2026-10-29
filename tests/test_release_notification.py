@@ -83,7 +83,7 @@ class ReleaseNotificationTests(unittest.TestCase):
                     self.assertIn(env["CENTRAL_RUN_URL"], summary)
                     self.assertIn("PHP SDK v2.2.2", message)
                     self.assertIn("2026-10-28", message)
-                    self.assertIn("<!subteam^", message)
+                    self.assertNotIn("<!subteam^", message)
                     if result == "success":
                         self.assertIn("accepted", message)
                         self.assertIn("cleanup: passed", message)
