@@ -11,37 +11,9 @@ permissions:
 
 # Do not cancel live validation; the central workflow owns locking and cleanup.
 jobs:
-  release-ref:
-    if: github.event_name != 'release' || !github.event.release.prerelease
-    runs-on: ubuntu-latest
-    timeout-minutes: 55
-    steps:
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
-        with:
-          egress-policy: audit
-      - name: Require an exact release tag
-        env:
-          PACKAGE_VERSION: ${{ github.event.release.tag_name || github.ref_name }}
-          RELEASE_TAG: ${{ github.event.release.tag_name || github.ref_name }}
-        shell: bash
-        run: |
-          if [[ "$GITHUB_EVENT_NAME" != release && "$GITHUB_EVENT_NAME" != workflow_dispatch ]]; then
-            echo 'Published validation only accepts release events or manual retries.' >&2
-            exit 1
-          fi
-          if [[ "$GITHUB_REF_TYPE" != tag ]] ||
-             [[ ! "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] ||
-             [[ "${PACKAGE_VERSION#v}" != "${RELEASE_TAG#v}" ]]; then
-            echo 'Select the existing stable release tag that matches the exact package version.' >&2
-            exit 1
-          fi
-
   validate:
-    needs: release-ref
     if: github.event_name != 'release' || !github.event.release.prerelease
-    # SDK-5977. Review and merge shared-action PR #8 before this caller.
-    uses: rudderlabs/github-action-sdk-e2e/.github/workflows/published-sdk-e2e.yml@1f92c84d6836a235604457ca29c02fd1a0d7c874
+    uses: rudderlabs/github-action-sdk-e2e/.github/workflows/published-sdk-e2e.yml@b6de40cc65abe8ee6c6593aac1787aea746b671f # v1.0.0
     with:
       package-version: ${{ github.event.release.tag_name || github.ref_name }}
       release-app-client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
@@ -51,9 +23,12 @@ jobs:
   notify-release:
     name: Notify release acceptance
     needs: validate
-    if: always() && github.event_name == 'release' && !github.event.release.prerelease
+    if: always() && github.event_name == 'release' && !github.event.release.prerelease && github.run_attempt == '1'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions: {}
+    env:
+      CENTRAL_RUN_URL: ${{ needs.validate.outputs.run-url }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
@@ -81,6 +56,7 @@ jobs:
           echo "root=PHP SDK $RELEASE_VERSION $result ($release_date). CC: <!subteam^S0555JBV36D> <!subteam^S03SHJ20350>" >> "$GITHUB_OUTPUT"
           echo "version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
           echo "checks=$checks" >> "$GITHUB_OUTPUT"
+          printf 'PHP SDK %s: %s\n%s\nCentral E2E: %s\n' "$RELEASE_VERSION" "$result" "$checks" "$CENTRAL_RUN_URL" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Send release status to Slack channel
         id: slack
@@ -99,7 +75,11 @@ jobs:
       - name: Require the release message timestamp
         env:
           THREAD_TS: ${{ steps.slack.outputs.ts }}
-        run: test -n "$THREAD_TS"
+        run: |
+          if [[ ! "$THREAD_TS" =~ ^[0-9]+\.[0-9]+$ ]]; then
+            echo 'Slack root message returned no valid timestamp.' >&2
+            exit 1
+          fi
 
       - name: Reply with links and check results
         uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0 # v1.27.0
@@ -111,7 +91,7 @@ jobs:
             {
               "thread_ts": "${{ steps.slack.outputs.ts }}",
               "reply_broadcast": false,
-              "text": ${{ toJSON(format('Release: <{0}|{1}> | <https://packagist.org/packages/rudderstack/rudder-php-sdk|Packagist> | <{2}/{3}/actions/runs/{4}|Validation run> | {5}', github.event.release.html_url, steps.status.outputs.version, github.server_url, github.repository, github.run_id, steps.status.outputs.checks)) }},
+              "text": ${{ toJSON(format('Release: <{0}|{1}> | <https://packagist.org/packages/rudderstack/rudder-php-sdk|Packagist> | <{2}/{3}/actions/runs/{4}|Validation run> | {5} | Central E2E: {6}', github.event.release.html_url, steps.status.outputs.version, github.server_url, github.repository, github.run_id, steps.status.outputs.checks, needs.validate.outputs.run-url)) }},
               "unfurl_links": false,
               "unfurl_media": false
             }

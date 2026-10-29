@@ -1,6 +1,6 @@
 # Published PHP SDK acceptance
 
-The published-package workflow requests the full central E2E suite for the exact stable release version. It uses the existing release App and waits for delivery validation and cleanup. Before this draft can merge, the central workflow must check the release tag against the event commit and release provenance, install the exact public registry package, and verify its Composer-resolved version and source reference.
+The published-package workflow requests the full central E2E suite for the exact stable release version. It uses the existing release App and waits for delivery validation and cleanup. The central workflow checks the release tag against the event commit and master ancestry, installs the exact public registry package, and verifies its Composer-resolved version and source reference.
 
 The release tag makes the package available to the registry. Acceptance starts on the published GitHub release event. This is post-tag acceptance, not a pre-publication gate.
 
@@ -22,6 +22,31 @@ The retry has no upload path or publishing credential. It derives the exact vers
 
 A published package remains published if acceptance fails. A retry does not create a tag or reannounce the release in Slack. A successful validation-only retry does not change an earlier failed run or its notification. Record the new acceptance run in the release ticket and existing Slack release thread.
 
+## Retry after a workflow fix
+
+A tag retry runs workflow code and pins stored at that tag. It cannot load a fix
+merged later to master. The retry workflow must exist on the default branch and
+selected tag. For an older tag or a workflow fix, use the current central workflow.
+Copy the full commit SHA from the original release run. Replace the example
+version, commit placeholder, and request ID before running:
+
+```sh
+gh workflow run server-sdk-validation.yml --repo rudderlabs/rudder-sdk-e2e-tests --ref main \
+  -f selection=auto -f source_repository=rudderlabs/rudder-php-sdk \
+  -f source_sha=RELEASE_EVENT_COMMIT_SHA -f package_version=X.Y.Z \
+  -f suite=full -f request_id=rudder-php-sdk-published-X_Y_Z-retry-UNIQUE_ID
+```
+
+The central fallback validates the exact public version and release commit. It
+cannot upload, create tags, or send a release announcement. Release-run reruns
+also stay silent after the first attempt. Record new evidence in the release
+ticket and existing release thread. If notification itself fails, repair that
+thread separately.
+
 ## Rollout
 
-Tracked in [SDK-5967](https://linear.app/rudderstack/issue/SDK-5967). Keep this PR draft until [central PR #32](https://github.com/rudderlabs/rudder-sdk-e2e-tests/pull/32) resolves [SDK-5978](https://linear.app/rudderstack/issue/SDK-5978) and its cleanup-budget finding. Adopt [SDK-5977](https://linear.app/rudderstack/issue/SDK-5977)'s shared workflow only after it is reviewed and available at a full immutable SHA. The current shared-action pin is from [PR #5](https://github.com/rudderlabs/github-action-sdk-e2e/pull/5) and must be verified or refreshed before merge. Hosted acceptance remains pending the next normal release. Do not create a release solely to test this wiring.
+Tracked in [SDK-5967](https://linear.app/rudderstack/issue/SDK-5967). Central
+#32/#33/#35 and the shared v1.0.0 action/workflow are merged. The caller pins the
+released commit `b6de40cc65abe8ee6c6593aac1787aea746b671f`. Hosted full registry,
+delivery, and cleanup acceptance remains pending the next normal release.
+Do not create a release solely to test this wiring.
