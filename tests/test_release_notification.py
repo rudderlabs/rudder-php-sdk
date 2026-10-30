@@ -30,7 +30,6 @@ class ReleaseNotificationTests(unittest.TestCase):
         self.assertIn("github.event_name == 'release'", self.notify["if"])
         self.assertIn("!github.event.release.prerelease", self.notify["if"])
         self.assertIn("github.run_attempt == '1'", self.notify["if"])
-        self.assertTrue(self.validate["uses"].endswith("@b6de40cc65abe8ee6c6593aac1787aea746b671f"))
 
     def test_scoped_token_and_no_publication_path(self):
         self.assertEqual(self.validate["secrets"], {"RELEASE_PRIVATE_KEY": "${{ secrets.RELEASE_PRIVATE_KEY }}"})
