@@ -1,0 +1,43 @@
+name: Server SDK E2E
+
+on:
+  pull_request:
+    branches: [master]
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions: {}
+
+# Central live runs own cleanup and are never cancelled by a newer PR update.
+# A stale candidate fails the shared freshness check; the updated PR gets a new run.
+jobs:
+  php-sdk-candidate-gate:
+    name: PHP SDK candidate gate
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.login != 'dependabot[bot]' &&
+      github.actor != 'dependabot[bot]' &&
+      startsWith(github.head_ref, 'release-please--')
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    permissions:
+      contents: read
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+      # Do not check out or execute PR code in this credential-bearing job.
+      - name: Create a central validation token
+        id: token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_PRIVATE_KEY }}
+          owner: rudderlabs
+          repositories: rudder-sdk-e2e-tests
+          permission-actions: write
+      - name: Validate the candidate through the shared harness
+        uses: rudderlabs/github-action-sdk-e2e@2d1262f86e519195dc723a8d244a8ecc8bcedb21 # full live E2E with per-run resource cleanup
+        with:
+          token: ${{ steps.token.outputs.token }}
+          suite: full
