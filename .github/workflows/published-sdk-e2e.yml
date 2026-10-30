@@ -9,11 +9,11 @@ on:
 permissions:
   contents: read
 
-# Do not cancel live validation; the central workflow owns locking and cleanup.
+# Do not cancel live validation; the central workflow owns resource cleanup.
 jobs:
   validate:
     if: github.event_name != 'release' || !github.event.release.prerelease
-    uses: rudderlabs/github-action-sdk-e2e/.github/workflows/published-sdk-e2e.yml@b6de40cc65abe8ee6c6593aac1787aea746b671f # v1.0.0
+    uses: rudderlabs/github-action-sdk-e2e/.github/workflows/published-sdk-e2e.yml@2d1262f86e519195dc723a8d244a8ecc8bcedb21 # full live E2E with per-run resource cleanup
     with:
       package-version: ${{ github.event.release.tag_name || github.ref_name }}
       release-app-client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}

@@ -47,8 +47,16 @@ thread separately.
 
 ## Rollout
 
-Tracked in [SDK-5967](https://linear.app/rudderstack/issue/SDK-5967). Central
-#32/#33/#35 and the shared v1.0.0 action/workflow are merged. The caller pins the
-released commit `b6de40cc65abe8ee6c6593aac1787aea746b671f`. Hosted full registry,
-delivery, and cleanup acceptance remains pending the next normal release.
+The caller pins shared-action #14 at
+`2d1262f86e519195dc723a8d244a8ecc8bcedb21`. The verifier requires full live
+delivery and verified deletion of the run's source, destination, and connection.
+
+Coordinate activation with central #46/#47 and the other callers under
+[SDK-6016](https://linear.app/rudderstack/issue/SDK-6016). The central lifecycle
+must be active before this caller runs. No legacy result fallback is provided.
+Native publication and registry checks remain unchanged. Full release-PR
+candidate support for this SDK is separate work.
+
+Hosted published-package acceptance remains pending the next normal release
+under [SDK-5797](https://linear.app/rudderstack/issue/SDK-5797).
 Do not create a release solely to test this wiring.
