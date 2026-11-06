@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.2.3](https://github.com/rudderlabs/rudder-php-sdk/compare/v2.2.2...v2.2.3) (2026-11-06)
+
+
+### Miscellaneous
+
+* **deps-dev:** bump squizlabs/php_codesniffer from 3.9.0 to 3.13.6 ([#158](https://github.com/rudderlabs/rudder-php-sdk/issues/158)) ([6706481](https://github.com/rudderlabs/rudder-php-sdk/commit/670648179209d448cfc609c8020cb2ba4c738453))
+* **deps-dev:** bump symfony/cache from 6.4.3 to 6.4.50 ([#155](https://github.com/rudderlabs/rudder-php-sdk/issues/155)) ([f35a38d](https://github.com/rudderlabs/rudder-php-sdk/commit/f35a38d98595ca7cdb830fb08e7684b32e10c83a))
+* **deps-dev:** bump symfony/process from 6.4.3 to 6.4.49 ([#157](https://github.com/rudderlabs/rudder-php-sdk/issues/157)) ([3d19c20](https://github.com/rudderlabs/rudder-php-sdk/commit/3d19c20879e40488f26eae0cc9d8859411f571a4))
+* **deps-dev:** bump symfony/yaml from 6.4.3 to 6.4.50 ([#156](https://github.com/rudderlabs/rudder-php-sdk/issues/156)) ([bedc1d9](https://github.com/rudderlabs/rudder-php-sdk/commit/bedc1d95753fd2d55f34a5829cd59278ad92e466))
+* **deps:** apply security-first dependabot policy ([#150](https://github.com/rudderlabs/rudder-php-sdk/issues/150)) ([bf9563c](https://github.com/rudderlabs/rudder-php-sdk/commit/bf9563c782b8547174dd7e281ae619e3f3c5e5a9))
+* move the PR title check to check-pr-title v2.0.3 ([#152](https://github.com/rudderlabs/rudder-php-sdk/issues/152)) ([cfdc2bd](https://github.com/rudderlabs/rudder-php-sdk/commit/cfdc2bd4b98a245e1782a211806cfcfc2ec62502))
+* run full live e2e on release prs ([#159](https://github.com/rudderlabs/rudder-php-sdk/issues/159)) ([5916324](https://github.com/rudderlabs/rudder-php-sdk/commit/59163243f1ff8f5d76517016e88269c0d5851455))
+* validate the exact published php package ([#153](https://github.com/rudderlabs/rudder-php-sdk/issues/153)) ([48b7cd8](https://github.com/rudderlabs/rudder-php-sdk/commit/48b7cd8ce39974bbf2defba3f5c859812c912bb1))
+* verify published e2e with per-run cleanup ([#154](https://github.com/rudderlabs/rudder-php-sdk/issues/154)) ([250808f](https://github.com/rudderlabs/rudder-php-sdk/commit/250808f2cc66103c9b7c0ede9099aff1cb010829))
+
 ## [2.2.2](https://github.com/rudderlabs/rudder-php-sdk/compare/v2.2.1...v2.2.2) (2026-09-11)
 
 
