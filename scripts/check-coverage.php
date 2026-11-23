@@ -10,14 +10,9 @@ if ($argc !== 3 || !is_numeric($argv[2])) {
     exit(2);
 }
 
-// PHPUnit writes no report without a coverage driver (pcov or Xdebug). CI must have one.
 if (!is_file($argv[1])) {
-    if (getenv('CI') === 'true') {
-        fwrite(STDERR, "Coverage report {$argv[1]} is missing.\n");
-        exit(2);
-    }
-    echo "Coverage report {$argv[1]} is missing; skipping the coverage check. Install pcov or Xdebug to run it.\n";
-    exit(0);
+    fwrite(STDERR, "Coverage report {$argv[1]} is missing. Run PHPUnit with a coverage driver (pcov or Xdebug).\n");
+    exit(2);
 }
 
 $report = simplexml_load_file($argv[1]);

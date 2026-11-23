@@ -15,10 +15,16 @@ composer.phar:
 # Minimum line coverage for `make tests`. Raise it when coverage improves.
 COVERAGE_MIN ?= 85
 
+# CI always measures coverage. Locally, without pcov or Xdebug, the tests run without the coverage check.
 tests: dependencies
 	@mkdir -p build/logs
-	@vendor/bin/phpunit --colors --coverage-clover=build/logs/coverage-result.xml --log-junit=build/logs/execution-result.xml
-	@php scripts/check-coverage.php build/logs/coverage-result.xml $(COVERAGE_MIN)
+	@if [ "$$CI" = "true" ] || php -r 'exit(extension_loaded("pcov") || extension_loaded("xdebug") ? 0 : 1);'; then \
+		vendor/bin/phpunit --colors --coverage-clover=build/logs/coverage-result.xml --log-junit=build/logs/execution-result.xml && \
+		php scripts/check-coverage.php build/logs/coverage-result.xml $(COVERAGE_MIN); \
+	else \
+		echo "No coverage driver (pcov or Xdebug): running the tests without the coverage check."; \
+		vendor/bin/phpunit --colors --no-coverage --log-junit=build/logs/execution-result.xml; \
+	fi
 	@php ./composer.phar validate
 
 lint: dependencies
