@@ -12,9 +12,13 @@ vendor: composer.phar
 composer.phar:
 	@curl -sS https://getcomposer.org/installer | php
 
+# Minimum line coverage for `make tests`. Raise it when coverage improves.
+COVERAGE_MIN ?= 85
+
 tests: dependencies
 	@mkdir -p build/logs
 	@vendor/bin/phpunit --colors --coverage-clover=build/logs/coverage-result.xml --log-junit=build/logs/execution-result.xml
+	@php scripts/check-coverage.php build/logs/coverage-result.xml $(COVERAGE_MIN)
 	@php ./composer.phar validate
 
 lint: dependencies
