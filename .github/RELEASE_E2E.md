@@ -47,8 +47,8 @@ thread separately.
 
 ## Rollout
 
-The caller pins shared-action #14 at
-`2d1262f86e519195dc723a8d244a8ecc8bcedb21`. The verifier requires full live
+The caller pins shared-action #22 at
+`e9cb787ee60ad7cd9ade4c6b819e5d17b4d093a1`. The verifier requires full live
 delivery and verified deletion of the run's source, destination, and connection.
 
 Coordinate activation with central #46/#47 and the other callers under
