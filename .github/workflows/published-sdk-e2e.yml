@@ -13,7 +13,7 @@ permissions:
 jobs:
   validate:
     if: github.event_name != 'release' || !github.event.release.prerelease
-    uses: rudderlabs/github-action-sdk-e2e/.github/workflows/published-sdk-e2e.yml@2d1262f86e519195dc723a8d244a8ecc8bcedb21 # full live E2E with per-run resource cleanup
+    uses: rudderlabs/github-action-sdk-e2e/.github/workflows/published-sdk-e2e.yml@e9cb787ee60ad7cd9ade4c6b819e5d17b4d093a1 # full live E2E, cleanup, and initial run-lookup retry (#21, #22)
     with:
       package-version: ${{ github.event.release.tag_name || github.ref_name }}
       release-app-client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
