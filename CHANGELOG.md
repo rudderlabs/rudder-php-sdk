@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.2.4](https://github.com/rudderlabs/rudder-php-sdk/compare/v2.2.3...v2.2.4) (2026-11-26)
+
+
+### Bug Fixes
+
+* read max_item_size_bytes and max_queue_size_bytes options ([#164](https://github.com/rudderlabs/rudder-php-sdk/issues/164)) ([950a8e9](https://github.com/rudderlabs/rudder-php-sdk/commit/950a8e951d0c613a159f0d07dddc6f069a9a27fc))
+
+
+### Miscellaneous
+
+* enforce a minimum unit test coverage ([#161](https://github.com/rudderlabs/rudder-php-sdk/issues/161)) ([00782dc](https://github.com/rudderlabs/rudder-php-sdk/commit/00782dcc2f0f11f04b86201142b10c4d20155d67))
+* update e2e action pin ([#163](https://github.com/rudderlabs/rudder-php-sdk/issues/163)) ([013b99c](https://github.com/rudderlabs/rudder-php-sdk/commit/013b99c6a8ac88c10007180df950958d898f8c16))
+
 ## [2.2.3](https://github.com/rudderlabs/rudder-php-sdk/compare/v2.2.2...v2.2.3) (2026-11-11)
 
 
