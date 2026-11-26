@@ -203,14 +203,14 @@ abstract class QueueConsumer extends Consumer
         }
 
         if (mb_strlen(json_encode($item), '8bit') >= $this->max_item_size_bytes) {
-            $msg = 'Item size is larger than ' . $this->max_item_size_bytes . ' bytes';
+            $msg = sprintf('Item size is larger than %d bytes', $this->max_item_size_bytes);
             error_log('[Analytics][' . $this->type . '] ' . $msg);
 
             return false;
         }
 
         if (mb_strlen(serialize([$item]), '8bit') >= $this->max_batch_size_bytes) {
-            $msg = 'Item size exceeds max batch size of ' . $this->max_batch_size_bytes . ' bytes';
+            $msg = sprintf('Item size exceeds max batch size of %d bytes', $this->max_batch_size_bytes);
             error_log('[Analytics][' . $this->type . '] ' . $msg);
 
             return false;
@@ -219,7 +219,7 @@ abstract class QueueConsumer extends Consumer
         $prospectiveQueue = $this->queue;
         $prospectiveQueue[] = $item;
         if (mb_strlen(serialize($prospectiveQueue), '8bit') >= $this->max_queue_size_bytes) {
-            $msg = 'Queue size is larger than ' . $this->max_queue_size_bytes . ' bytes';
+            $msg = sprintf('Queue size is larger than %d bytes', $this->max_queue_size_bytes);
             error_log('[Analytics][' . $this->type . '] ' . $msg);
 
             return false;
