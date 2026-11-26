@@ -157,7 +157,7 @@ abstract class QueueConsumer extends Consumer
         $success = true;
 
         while ($count > 0 && $success) {
-            $batch = array_splice($this->queue, 0, min($this->flush_at, $count));
+            $batch = $this->takeNextBatch();
 
             if (mb_strlen(serialize($batch), '8bit') >= $this->max_batch_size_bytes) {
                 $msg = 'Batch size is larger than 512KB';
@@ -202,15 +202,24 @@ abstract class QueueConsumer extends Consumer
             return false;
         }
 
-        if (mb_strlen(serialize($this->queue), '8bit') >= $this->max_queue_size_bytes) {
-            $msg = 'Queue size is larger than ' . $this->max_queue_size_bytes . ' bytes';
+        if (mb_strlen(json_encode($item), '8bit') >= $this->max_item_size_bytes) {
+            $msg = 'Item size is larger than ' . $this->max_item_size_bytes . ' bytes';
             error_log('[Analytics][' . $this->type . '] ' . $msg);
 
             return false;
         }
 
-        if (mb_strlen(json_encode($item), '8bit') >= $this->max_item_size_bytes) {
-            $msg = 'Item size is larger than ' . $this->max_item_size_bytes . ' bytes';
+        if (mb_strlen(serialize([$item]), '8bit') >= $this->max_batch_size_bytes) {
+            $msg = 'Item size exceeds max batch size of ' . $this->max_batch_size_bytes . ' bytes';
+            error_log('[Analytics][' . $this->type . '] ' . $msg);
+
+            return false;
+        }
+
+        $prospectiveQueue = $this->queue;
+        $prospectiveQueue[] = $item;
+        if (mb_strlen(serialize($prospectiveQueue), '8bit') >= $this->max_queue_size_bytes) {
+            $msg = 'Queue size is larger than ' . $this->max_queue_size_bytes . ' bytes';
             error_log('[Analytics][' . $this->type . '] ' . $msg);
 
             return false;
@@ -356,6 +365,35 @@ abstract class QueueConsumer extends Consumer
     protected function retryMaxTimeSeconds(): int
     {
         return max(1, (int)ceil(($this->maximum_backoff_duration * max(1, $this->maxRetries)) / 1000));
+    }
+
+    /**
+     * Take the next batch from the queue without exceeding max_batch_size_bytes when possible.
+     *
+     * @return array<int,mixed>
+     */
+    private function takeNextBatch(): array
+    {
+        $limit = min($this->flush_at, count($this->queue));
+        $candidate = array_slice($this->queue, 0, $limit);
+
+        if (mb_strlen(serialize($candidate), '8bit') < $this->max_batch_size_bytes) {
+            return array_splice($this->queue, 0, $limit);
+        }
+
+        $batch = [];
+        for ($index = 0; $index < $limit; $index++) {
+            $nextBatch = $batch;
+            $nextBatch[] = $this->queue[$index];
+
+            if ($batch !== [] && mb_strlen(serialize($nextBatch), '8bit') >= $this->max_batch_size_bytes) {
+                break;
+            }
+
+            $batch = $nextBatch;
+        }
+
+        return array_splice($this->queue, 0, count($batch));
     }
 
     /**

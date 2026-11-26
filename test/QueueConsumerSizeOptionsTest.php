@@ -85,6 +85,63 @@ class QueueConsumerSizeOptionsTest extends TestCase
         self::assertSame([$smallItem], $consumer->flushedBatches[0]);
     }
 
+    public function testItemExceedingMaxBatchSizeBytesIsRejectedBeforeEnqueue(): void
+    {
+        $consumer = $this->createConsumer([
+            'flush_at' => 10,
+            'max_item_size_bytes' => 640000,
+        ]);
+
+        $validItem = [
+            'userId' => 'user-1',
+            'event' => 'Valid Queued Event',
+        ];
+        $oversizedForBatchItem = [
+            'userId' => 'user-1',
+            'event' => 'Oversized For Batch',
+            'properties' => ['payload' => str_repeat('a', 600000)],
+        ];
+
+        self::assertTrue($consumer->track($validItem));
+
+        [$accepted, $log] = $this->captureErrorLog(
+            static fn (): bool => $consumer->track($oversizedForBatchItem)
+        );
+
+        self::assertFalse($accepted);
+        self::assertStringContainsString('Item size exceeds max batch size of 512000 bytes', $log);
+
+        self::assertTrue($consumer->flush());
+        self::assertCount(1, $consumer->flushedBatches);
+        self::assertSame([$validItem], $consumer->flushedBatches[0]);
+    }
+
+    public function testFlushSplitsAcceptedLargerItemsIntoDeliverableBatches(): void
+    {
+        $consumer = $this->createConsumer([
+            'flush_at' => 10,
+            'max_item_size_bytes' => 300000,
+        ]);
+
+        $firstItem = [
+            'userId' => 'user-1',
+            'event' => 'Large Event 1',
+            'properties' => ['payload' => str_repeat('a', 260000)],
+        ];
+        $secondItem = [
+            'userId' => 'user-1',
+            'event' => 'Large Event 2',
+            'properties' => ['payload' => str_repeat('b', 260000)],
+        ];
+
+        self::assertTrue($consumer->track($firstItem));
+        self::assertTrue($consumer->track($secondItem));
+        self::assertTrue($consumer->flush());
+        self::assertCount(2, $consumer->flushedBatches);
+        self::assertSame([$firstItem], $consumer->flushedBatches[0]);
+        self::assertSame([$secondItem], $consumer->flushedBatches[1]);
+    }
+
     public function testCustomMaxQueueSizeBytesEnforcesQueueCap(): void
     {
         $item = [
@@ -93,13 +150,46 @@ class QueueConsumerSizeOptionsTest extends TestCase
             'properties' => ['payload' => str_repeat('q', 150)],
         ];
         $singleItemQueueSize = mb_strlen(serialize([$item]), '8bit');
+        $twoItemQueueSize = mb_strlen(serialize([$item, $item]), '8bit');
 
         $consumer = $this->createConsumer([
             'flush_at' => 10,
-            'max_queue_size_bytes' => $singleItemQueueSize,
+            'max_queue_size_bytes' => $twoItemQueueSize,
         ]);
 
+        self::assertGreaterThan($singleItemQueueSize, $twoItemQueueSize);
         self::assertTrue($consumer->track($item));
+
+        [$accepted, $log] = $this->captureErrorLog(
+            static fn (): bool => $consumer->track($item)
+        );
+
+        self::assertFalse($accepted);
+        self::assertStringContainsString(
+            'Queue size is larger than ' . $twoItemQueueSize . ' bytes',
+            $log
+        );
+
+        self::assertTrue($consumer->flush());
+        self::assertCount(1, $consumer->flushedBatches);
+        self::assertCount(1, $consumer->flushedBatches[0]);
+
+        self::assertTrue($consumer->track($item));
+    }
+
+    public function testFirstItemExceedingMaxQueueSizeBytesIsRejectedWithFlushAtOne(): void
+    {
+        $item = [
+            'userId' => 'user-1',
+            'event' => 'Oversized First Event',
+            'properties' => ['payload' => str_repeat('q', 200)],
+        ];
+        $singleItemQueueSize = mb_strlen(serialize([$item]), '8bit');
+
+        $consumer = $this->createConsumer([
+            'flush_at' => 1,
+            'max_queue_size_bytes' => $singleItemQueueSize,
+        ]);
 
         [$accepted, $log] = $this->captureErrorLog(
             static fn (): bool => $consumer->track($item)
@@ -110,12 +200,7 @@ class QueueConsumerSizeOptionsTest extends TestCase
             'Queue size is larger than ' . $singleItemQueueSize . ' bytes',
             $log
         );
-
-        self::assertTrue($consumer->flush());
-        self::assertCount(1, $consumer->flushedBatches);
-        self::assertCount(1, $consumer->flushedBatches[0]);
-
-        self::assertTrue($consumer->track($item));
+        self::assertCount(0, $consumer->flushedBatches);
     }
 
     public function testHigherMaxQueueSizeBytesPermitsAdditionalItems(): void
@@ -212,6 +297,15 @@ class QueueConsumerSizeOptionsTest extends TestCase
              * @var array<int,array<int,mixed>>
              */
             public array $flushedBatches = [];
+
+            /**
+             * @param array<string,mixed> $options
+             */
+            public function __construct(string $secret, array $options = [])
+            {
+                parent::__construct($secret, $options);
+                $this->flush_interval_in_mills = 0;
+            }
 
             /**
              * @param array<int,mixed> $batch
