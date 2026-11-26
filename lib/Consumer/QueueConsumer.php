@@ -42,6 +42,26 @@ abstract class QueueConsumer extends Consumer
             $this->max_queue_size = $options['max_queue_size'];
         }
 
+        if (isset($options['max_queue_size_bytes'])) {
+            $maxQueueSizeBytes = $this->parsePositiveIntOption($options['max_queue_size_bytes']);
+            if ($maxQueueSizeBytes === null) {
+                $msg = 'Max queue size in bytes must be a positive integer';
+                error_log('[Analytics][' . $this->type . '] ' . $msg);
+            } else {
+                $this->max_queue_size_bytes = $maxQueueSizeBytes;
+            }
+        }
+
+        if (isset($options['max_item_size_bytes'])) {
+            $maxItemSizeBytes = $this->parsePositiveIntOption($options['max_item_size_bytes']);
+            if ($maxItemSizeBytes === null) {
+                $msg = 'Max item size in bytes must be a positive integer';
+                error_log('[Analytics][' . $this->type . '] ' . $msg);
+            } else {
+                $this->max_item_size_bytes = $maxItemSizeBytes;
+            }
+        }
+
         if (isset($options['batch_size'])) {
             if ($options['batch_size'] < 1) {
                 $msg = 'Batch Size must not be less than 1';
@@ -183,14 +203,14 @@ abstract class QueueConsumer extends Consumer
         }
 
         if (mb_strlen(serialize($this->queue), '8bit') >= $this->max_queue_size_bytes) {
-            $msg = 'Queue size is larger than 32MB';
+            $msg = 'Queue size is larger than ' . $this->max_queue_size_bytes . ' bytes';
             error_log('[Analytics][' . $this->type . '] ' . $msg);
 
             return false;
         }
 
         if (mb_strlen(json_encode($item), '8bit') >= $this->max_item_size_bytes) {
-            $msg = 'Item size is larger than 32KB';
+            $msg = 'Item size is larger than ' . $this->max_item_size_bytes . ' bytes';
             error_log('[Analytics][' . $this->type . '] ' . $msg);
 
             return false;
@@ -336,5 +356,22 @@ abstract class QueueConsumer extends Consumer
     protected function retryMaxTimeSeconds(): int
     {
         return max(1, (int)ceil(($this->maximum_backoff_duration * max(1, $this->maxRetries)) / 1000));
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private function parsePositiveIntOption($value): ?int
+    {
+        if (is_bool($value)) {
+            return null;
+        }
+
+        $parsed = filter_var($value, FILTER_VALIDATE_INT);
+        if ($parsed === false || $parsed < 1) {
+            return null;
+        }
+
+        return $parsed;
     }
 }
